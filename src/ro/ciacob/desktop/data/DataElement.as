@@ -12,6 +12,7 @@ package ro.ciacob.desktop.data {
 	import ro.ciacob.desktop.data.exporters.PlainObjectExporter;
 	import ro.ciacob.desktop.signals.Observer;
 	import ro.ciacob.utils.Arrays;
+	import ro.ciacob.utils.ByteArrays;
 	import ro.ciacob.utils.Descriptor;
 	import ro.ciacob.utils.Objects;
 
@@ -87,12 +88,12 @@ package ro.ciacob.desktop.data {
 			}
 		}
 
-		private var _autoBroadcast:Boolean = true;
-		private var _children:Array = [];
-		private var _content:Object = {};
-		private var _metadata:Object = {};
-		private var _observer:Observer;
-		private var _ownFlatElementsMap:Object;
+		public var _autoBroadcast:Boolean = true;
+		public var _children:Array = [];
+		public var _content:Object = {};
+		public var _metadata:Object = {};
+		public var _observer:Observer;
+		public var _ownFlatElementsMap:Object;
 
 		/**
 		 * @inheritDoc
@@ -144,11 +145,13 @@ package ro.ciacob.desktop.data {
 		 * @return	A clone of this element.
 		 */
 		public function clone(shallow:Boolean = false):IDataElement {
-			var classDef:Class = Object(this).constructor;
-			var dupplicate:IDataElement = new classDef;
-			var serializedSelf:ByteArray = this.toSerialized();
-			dupplicate.fromSerialized(serializedSelf)
-			return dupplicate;
+//			var classDef:Class = Object(this).constructor;
+//			var dupplicate:IDataElement = new classDef;
+//			var serializedSelf:ByteArray = this.toSerialized();
+//			dupplicate.fromSerialized(serializedSelf)
+//			return dupplicate;
+			
+			return ByteArrays.cloneObject (this) as IDataElement;
 		}
 
 		/**
