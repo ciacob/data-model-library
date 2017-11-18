@@ -3,44 +3,12 @@ package ro.ciacob.desktop.data {
 	
 	import ro.ciacob.desktop.signals.IObserver;
 
-	public interface IDataElement extends IObserver {
+	public interface IDataElement {
 
 		/**
 		 * Adds the provided <code>IDataElement</code> as a last child. If it was
 		 * previously parented by some other element, it is first deleted there. If it is
 		 * already a child of this element, nothing happens.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.ADD </li>
-		 * 					<li> IDataChangeDetail.changedElement = the child element </li>
-		 * 					<li> IDataChangeDetail.originator = the parent element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 *
 		 * @param	child
 		 * 			The child to be added.
@@ -51,38 +19,6 @@ package ro.ciacob.desktop.data {
 		 * Adds the provided child to this element at the specified index. If the child
 		 * was previously parented by some other element, it is first deleted there.
 		 * If it is already a child of this element, nothing happens.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.ADD </li>
-		 * 					<li> IDataChangeDetail.changedElement = the child element </li>
-		 * 					<li> IDataChangeDetail.originator = the parent element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 *
 		 * @param	child
 		 * 			The child to be added.
@@ -115,39 +51,6 @@ package ro.ciacob.desktop.data {
 
 		/**
 		 * Convenience way for erasing all children (metadata and content stay, though).
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.REFRESH </li>
-		 * 					<li> IDataChangeDetail.changedElement = null </li>
-		 * 					<li> IDataChangeDetail.originator = the parent element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
-		 *
 		 */
 		function empty():void;
 
@@ -186,38 +89,6 @@ package ro.ciacob.desktop.data {
 		 *
 		 * @param	serialized
 		 * 			Some serialized value to populate the element from.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.REFRESH </li>
-		 * 					<li> IDataChangeDetail.changedElement = null </li>
-		 * 					<li> IDataChangeDetail.originator = the parent element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 */
 		function fromSerialized(serialized:ByteArray):void;
 
@@ -327,38 +198,6 @@ package ro.ciacob.desktop.data {
 		 *
 		 * @param	content
 		 * 			The content that is to be parsed and imported.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.REFRESH </li>
-		 * 					<li> IDataChangeDetail.changedElement = null </li>
-		 * 					<li> IDataChangeDetail.originator = the parent element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 */
 		function importFromFormat(format:String, content:*):void;
 
@@ -397,38 +236,6 @@ package ro.ciacob.desktop.data {
 		 * 			Optional. You can use this argument to finely tune the process.
 		 * 			For instance, depending on the argument, you could generate diferent
 		 * 			default content.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.REFRESH </li>
-		 * 					<li> IDataChangeDetail.changedElement = null </li>
-		 * 					<li> IDataChangeDetail.originator = the parent element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 */
 		function populateWithDefaultData(details:* = null):void;
 
@@ -439,38 +246,6 @@ package ro.ciacob.desktop.data {
 		 * @param	child
 		 * 			The child to be deleted. If it is not a child of this implementor, an
 		 * 			error will the thrown.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.REMOVE </li>
-		 * 					<li> IDataChangeDetail.changedElement = the child deleted </li>
-		 * 					<li> IDataChangeDetail.originator = the parent element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 */
 		function removeDataChild(child:IDataElement):void;
 
@@ -484,38 +259,6 @@ package ro.ciacob.desktop.data {
 		 * @param	index
 		 * 			The index to delete a child at, zero based. If no child is to be found
 		 * 			at the supplied index, an error will be thrown.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.REMOVE </li>
-		 * 					<li> IDataChangeDetail.changedElement = the child deleted </li>
-		 * 					<li> IDataChangeDetail.originator = the parent element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 */
 		function removeDataChildAt(atIndex:int):void;
 
@@ -541,38 +284,6 @@ package ro.ciacob.desktop.data {
 		 * 			A key to associate with the new content to set.
 		 * @param	content
 		 * 			The new content to be set.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_CONTENT_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.CHANGE </li>
-		 * 					<li> IDataChangeDetail.changedElement = the current element </li>
-		 * 					<li> IDataChangeDetail.originator = the current element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 */
 		function setContent(key:String, content:*):void;
 
@@ -589,38 +300,6 @@ package ro.ciacob.desktop.data {
 		 *
 		 * @param	metadata
 		 * 			A value to associate to the metadata being set.
-		 *
-		 * <p>
-		 * <strong>NOTE:</strong>
-		 * Broadcasts an <code>IObserver</code> <strong>notification</strong> named
-		 * <code>DataChangeDetail.MODEL_METADATA_CHANGED</code>; the following parameters
-		 * will be passed to any callback that registers to it:
-		 * </p>
-		 * <table class="innertable">
-		 * 		<tr>
-		 * 			<th> index </th>
-		 * 			<th> type </th>
-		 * 			<th> value </th>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 0 </td>
-		 * 			<td> IDataElement </td>
-		 * 			<td> The element broadcasting the notification.
-		 * 				 <strong> Deprecated, set for removal. </strong>
-		 * 			</td>
-		 * 		</tr>
-		 * 		<tr>
-		 * 			<td> 1 </td>
-		 * 			<td> IDataChangeDetail </td>
-		 * 			<td> Values contained are:
-		 * 				<ul>
-		 * 					<li> IDataChangeDetail.changeType = DataChangeDetail.CHANGE </li>
-		 * 					<li> IDataChangeDetail.changedElement = the current element </li>
-		 * 					<li> IDataChangeDetail.originator = the current element </li>
-		 * 				</ul>
-		 * 			</td>
-		 * 		</tr>
-		 * </table>
 		 */
 		function setMetadata(key:String, metadata:*):void;
 

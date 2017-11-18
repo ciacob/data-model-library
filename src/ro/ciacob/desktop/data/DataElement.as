@@ -3,18 +3,16 @@ package ro.ciacob.desktop.data {
 	import flash.utils.ByteArray;
 	import flash.utils.getQualifiedClassName;
 	
-	import mx.containers.errors.ConstraintError;
 	import mx.utils.ObjectUtil;
 	
 	import ro.ciacob.ciacob;
 	import ro.ciacob.desktop.data.constants.DataKeys;
 	import ro.ciacob.desktop.data.exporters.IExporter;
 	import ro.ciacob.desktop.data.exporters.PlainObjectExporter;
-	import ro.ciacob.desktop.signals.Observer;
 	import ro.ciacob.utils.Arrays;
 	import ro.ciacob.utils.ByteArrays;
-	import ro.ciacob.utils.Descriptor;
 	import ro.ciacob.utils.Objects;
+	import ro.ciacob.utils.constants.CommonStrings;
 
 	use namespace ciacob;
 
@@ -79,7 +77,7 @@ package ro.ciacob.desktop.data {
 		 */
 		public function DataElement(initialMetadata:Object = null, initialContent:Object =
 			null) {
-			_observer = new Observer;
+			//_observer = new Observer;
 			if (initialMetadata != null) {
 				_importInitialMetadata(initialMetadata);
 			}
@@ -88,11 +86,11 @@ package ro.ciacob.desktop.data {
 			}
 		}
 
-		public var _autoBroadcast:Boolean = true;
+//		public var _autoBroadcast:Boolean = true;
 		public var _children:Array = [];
 		public var _content:Object = {};
 		public var _metadata:Object = {};
-		public var _observer:Observer;
+		//public var _observer:Observer;
 		public var _ownFlatElementsMap:Object;
 
 		/**
@@ -120,8 +118,7 @@ package ro.ciacob.desktop.data {
 			_children.splice(atIndex, 0, child);
 			DataElement(child).setParent(this);
 			resetIntrinsicMeta();
-			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.
-				ADD, child, this));
+//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.ADD, child, this));
 		}
 
 		/**
@@ -169,8 +166,7 @@ package ro.ciacob.desktop.data {
 		 */
 		public function empty():void {
 			_children = [];
-			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.
-				REFRESH, null, this));
+//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.REFRESH, null, this));
 		}
 
 		/**
@@ -190,8 +186,7 @@ package ro.ciacob.desktop.data {
 		public function fromSerialized(serialized:ByteArray):void {
 			_fromByteArray(ByteArray(serialized));
 			resetIntrinsicMeta();
-			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.
-				REFRESH, null, this));
+//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.REFRESH, null, this));
 		}
 
 		/**
@@ -327,9 +322,9 @@ package ro.ciacob.desktop.data {
 			return Arrays.sortAndTestForIdenticPrimitives(ownKeys, testKeys);
 		}
 
-		public function isObserving(changeType:String):Boolean {
-			return _observer.isObserving(changeType);
-		}
+//		public function isObserving(changeType:String):Boolean {
+//			return _observer.isObserving(changeType);
+//		}
 
 		/**
 		 * @inheritDoc
@@ -344,21 +339,21 @@ package ro.ciacob.desktop.data {
 		/**
 		 * @inheritDoc
 		 */
-		public function notifyChange (changeType:String, ... details):void {
-			details.unshift(changeType);
-			if (_autoBroadcast || _forcingNotification) {
-				
-				// Broadcast on current level
-				_observer.notifyChange.apply(this, details);
-				
-				// Broadcast on higher levels
-				var parentElement:IDataElement = this.dataParent;
-				while (parentElement != null) {
-					parentElement.notifyChange.apply(parentElement, details);
-					parentElement = parentElement.dataParent;
-				}
-			}
-		}
+//		public function notifyChange (changeType:String, ... details):void {
+//			details.unshift(changeType);
+//			if (_autoBroadcast || _forcingNotification) {
+//				
+//				// Broadcast on current level
+//				_observer.notifyChange.apply(this, details);
+//				
+//				// Broadcast on higher levels
+//				var parentElement:IDataElement = this.dataParent;
+//				while (parentElement != null) {
+//					parentElement.notifyChange.apply(parentElement, details);
+//					parentElement = parentElement.dataParent;
+//				}
+//			}
+//		}
 
 		/**
 		 * @inheritDoc
@@ -370,9 +365,9 @@ package ro.ciacob.desktop.data {
 		/**
 		 * @inheritDoc
 		 */
-		public function observe(changeType:String, callback:Function):void {
-			_observer.observe(changeType, callback);
-		}
+//		public function observe(changeType:String, callback:Function):void {
+//			_observer.observe(changeType, callback);
+//		}
 
 		/**
 		 * @inheritDoc
@@ -414,8 +409,7 @@ package ro.ciacob.desktop.data {
 			DataElement(child).setIntrinsicMetadata(DataKeys.ROUTE, '-1');
 			_children.splice(childIndex, 1);
 			resetIntrinsicMeta();
-			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.
-				REMOVE, child, this));
+//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.REMOVE, child, this));
 		}
 
 		/**
@@ -442,13 +436,13 @@ package ro.ciacob.desktop.data {
 		 * alternative.
 		 *
 		 */
-		public function setAutoBroadcastMode(mode:Boolean):void {
-			_autoBroadcast = mode;
-		}
+//		public function setAutoBroadcastMode(mode:Boolean):void {
+//			_autoBroadcast = mode;
+//		}
 
-		public function getAutoBroadcastMode() : Boolean {
-			return _autoBroadcast;
-		}
+//		public function getAutoBroadcastMode() : Boolean {
+//			return _autoBroadcast;
+//		}
 
 		/**
 		 * @inheritDoc
@@ -458,25 +452,23 @@ package ro.ciacob.desktop.data {
 				throw(new Error('\nDataElement - setContent(): you can only set primitives, arrays or simple objects, nested to any level.\n'));
 			}
 			_content[key] = content;
-			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.
-				CHANGE, this, this));
+//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.CHANGE, this, this));
 		}
 
 		public function setMetadata(key:String, metadata:*):void {
 			if (READONLY_KEYS.indexOf(key) == -1) {
 				_metadata[key] = metadata;
 				resetIntrinsicMeta();
-				notifyChange(DataChangeDetail.MODEL_METADATA_CHANGED, this, new DataChangeDetail(DataChangeDetail.
-					CHANGE, this, this));
+//				notifyChange(DataChangeDetail.MODEL_METADATA_CHANGED, this, new DataChangeDetail(DataChangeDetail.CHANGE, this, this));
 			}
 		}
 
 		/**
 		 * @inheritDoc
 		 */
-		public function stopObserving(changeType:String = null, callback:Function = null):void {
-			_observer.stopObserving(changeType, callback);
-		}
+//		public function stopObserving(changeType:String = null, callback:Function = null):void {
+//			_observer.stopObserving(changeType, callback);
+//		}
 
 		/**
 		 * @inheritDoc
@@ -498,8 +490,7 @@ package ro.ciacob.desktop.data {
 		 */
 		public function triggerNotification():void {
 			_forcingNotification = true;
-			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.
-				REFRESH, null, this));
+//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.REFRESH, null, this));
 			_forcingNotification = false;
 		}
 
@@ -545,25 +536,22 @@ package ro.ciacob.desktop.data {
 		 * @private
 		 */
 		ciacob function resetIntrinsicMeta():void {
-			var route:String;
+
 			if (this.dataParent != null) {
+				
 				// Index
 				setIndex(DataElement(dataParent).getChildIndex(this));
+				
 				// Route
-				var routeSegments:Array = [];
-				var current:DataElement = this;
-				do {
-					routeSegments.unshift(current.index);
-					current = DataElement(current.dataParent);
-				} while (current != null);
-				route = routeSegments.join('_');
-				setIntrinsicMetadata(DataKeys.ROUTE, route);
+				var myRoute : String = DataElement(dataParent).route.concat(CommonStrings.UNDERSCORE, this.index);	
+				setIntrinsicMetadata(DataKeys.ROUTE, myRoute);
+				
 				// Level
+				var routeSegments:Array = myRoute.split(CommonStrings.UNDERSCORE);
 				setIntrinsicMetadata(DataKeys.LEVEL, routeSegments.length - 1);
 			} else {
 				setIndex(-1);
-				route = '-1';
-				setIntrinsicMetadata(DataKeys.ROUTE, route);
+				setIntrinsicMetadata(DataKeys.ROUTE, -1);
 				setIntrinsicMetadata(DataKeys.LEVEL, 0);
 			}
 			parentFlatElementsMap[route] = this;
@@ -624,91 +612,6 @@ package ro.ciacob.desktop.data {
 		 */
 		ciacob function get root () : IDataElement {
 			return (parentFlatElementsMap['-1'] as IDataElement);
-		}
-		
-		/**
-		 * Trims the complete hierarchy this element is part of, down to the number of elements
-		 * given as argument. Starts with leaves, and progresses, in order, with latest branches 
-		 * toward the root. CAN ONLY BE INVOKED ON A ROOT ELEMENT INSTANCE.
-		 * 
-		 * @param numTrimTo	The number of elements to be left in the hierarchy. Must be at least 1.
-		 * 				    If larger than the total number of elements in the hierarchy, no action
-		 * 					is taken.
-		 * 
-		 * @param refreshWhenDone Optional, defaults to `false`. Whether to dispatch a data change 
-		 * 						  notification of type REFRESH when the operation has completed (no
-		 * 						  notifications are dispatched while leaves and branches are being
-		 * 						  "cut down").
-		 * 
-		 * @param counter A function taking as its lone argument an item (an IDataElement implementor) and 
-		 * 				  returning a Boolean. `True` means "yes, count this item", while `false` means
-		 * 				  "no, ignore this item, it shouldn't count". This function, if given, will be used
-		 * 				  to relax the `numTrimTo` limit, in a way that more items could, in fact, be kept 
-		 * 				  (provided they meet certain criteria).
-		 * 
-		 * @throw ArgumentError "ILLEGAL TRIM TO VALUE" If the `numTrimTo` argument has been set to `0`.
-		 * 
-		 * @throw ConstraintError "NOT ROOT ELEMENT" When trying to launch this methd from an element that is 
-		 * 						  not the root element
-		 */
-		ciacob function rootTrimHierarchyTo (numTrimTo : uint, refreshWhenDone : Boolean = false, counter : Function = null) : void {
-			if (this !== root) {
-				throw (new ConstraintError ('NOT ROOT ELEMENT'));
-				return;
-			}
-			if (numTrimTo == 0) {
-				throw (new ArgumentError ('ILLEGAL TRIM TO VALUE'));
-				return;
-			}
-			var uidsList : Array = Objects.getKeys (parentFlatElementsMap);
-			var numUids : int = uidsList.length;
-			var uid : String = null;
-			if (numTrimTo > numUids) {
-				return;
-			}
-			uidsList.sort (Descriptor.multiPartComparison);
-			uidsList.reverse();
-			var deletionList : Array = [];
-			if (counter == null) {
-				deletionList = uidsList.slice (0, numUids - numTrimTo);
-			} else {
-				var itemsToKeep : uint = 0;
-				var j : int = (numUids - 1);
-				var item : IDataElement = null;
-				for (j; j >= 0; j--) {
-					uid = (uidsList[j] as String);
-					item = (parentFlatElementsMap[uid] as IDataElement);
-					if (counter (item)) {
-						itemsToKeep++;
-						if (itemsToKeep >= numTrimTo) {
-							break;
-						}
-					}
-				}
-				var deletionIndex : int = uidsList.indexOf (uid);
-				deletionList = uidsList.slice (0, deletionIndex);
-			}
-			_autoBroadcast = false;
-			
-			var i : int = 0;
-			var numDeletions : int = deletionList.length;
-			var deletable : IDataElement = null;
-			var parentOfDeletable : DataElement = null;
-			for (i; i < numDeletions; i++) {
-				uid = (deletionList[i] as String);
-				deletable = (parentFlatElementsMap[uid] as IDataElement);
-				parentOfDeletable = (deletable.dataParent as DataElement);
-				parentOfDeletable.setAutoBroadcastMode (false);
-				parentOfDeletable.removeDataChild (deletable);
-				parentOfDeletable.setAutoBroadcastMode (true);
-			}
-			var test1 : Array = Objects.getKeys (parentFlatElementsMap);
-			var test2 : int = test1.length;
-			if (refreshWhenDone) {
-				notifyChange (DataChangeDetail.MODEL_CONTENT_CHANGED, this, 
-					new DataChangeDetail (DataChangeDetail.REFRESH, null, this));
-			}
-			_autoBroadcast = true;
 		}
 
 		private function _fromByteArray(byteArray:ByteArray, recurse:Boolean = true, mustCreate:Boolean =
