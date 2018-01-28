@@ -1,6 +1,8 @@
 package ro.ciacob.desktop.data2 {
-	import flash.utils.ByteArray;
-
+	
+	/**
+	 * Stores context information about a change in a dataset.
+	 */
 	public interface IDatasetReport {
 		
 		/**
@@ -16,32 +18,18 @@ package ro.ciacob.desktop.data2 {
 		function get timestamp () : Number;
 		
 		/**
-		 * The respective offsets of changes.
-		 * 
-		 * NOTE: For instance, if an operation changes a contiguous sequence of 128 bytes starting at 
-		 * ofset 348, `offsets` will point to a Vector with one integer, with the value of 348.
-		 * Consequently, both `changedBytes` and `originalBytes` will point to Vectors with
-		 * one ByteArray object each, and the ByteArrays will both have 128 bytes starting
-		 * at offset `0`. Only the ByteArray pointed to by `changedBytes` will contain a copy of
-		 * the new/changed bytes, and the other, of the old/original ones.
-		 * 
-		 * Where the operation produce sparse changes, an entry like the one described above will
-		 * be includded for each contiguous sequence of bytes.
+		 * Stores one change
 		 */
-		function set offsets (value : Vector.<uint>) : void;
-		function get offsets () : Vector.<uint>;
+		function addChangeRecord (change : IChangeRecord) : void;
 		
 		/**
-		 * The respective sequences of changed bytes.
+		 * Stores an arbitrary number of changes
 		 */
-		function set changedBytes (value : Vector.<ByteArray>) : void;
-		function get changedBytes () : Vector.<ByteArray>;
+		function addChangeRecords (... changes) : void;
 		
 		/**
-		 * The respective sequences of original bytes.
+		 * Returns the list of changes stored with this report
 		 */
-		function set originalBytes (value : Vector.<ByteArray>) : void;
-		function get originalBytes () : Vector.<ByteArray>;
-		
+		function get changes () : Vector.<IChangeRecord>;
 	}
 }

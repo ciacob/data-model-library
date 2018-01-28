@@ -75,7 +75,7 @@ package ro.ciacob.desktop.data2 {
 		/**
 		 * @see IDataElement.level
 		 */
-		function get depth () : uint;
+		function get depth () : int;
 		
 		/**
 		 * @see IDataElement.index
@@ -85,7 +85,7 @@ package ro.ciacob.desktop.data2 {
 		/**
 		 * @see IDataElement.route
 		 */
-		function get route () : String;
+		function get route () : Vector.<int>;
 		
 		
 		// SEARCHING
@@ -158,43 +158,25 @@ package ro.ciacob.desktop.data2 {
 		 * untyped (varname : *) version, both speed and memorywise. They are recommended in bulk operations (e.g., loops).
 		 * 
 		 * NOTE: version 2.0 DROPS support for dynamic and weakly-typed values (Object, Array), and, consequently, drops
-		 * support for
-		 * multi-dimensional values of arbitrary nesting (i.e., Arrays that contain Arrays or Objects, or viceversa). One can 
-		 * still represent these structures using `addSubset()` & friends (see above).
+		 * support for multi-dimensional values of arbitrary nesting (i.e., Arrays that contain Arrays or Objects, or viceversa).
+		 * One can still represent these structures using `addSubset()` & friends (see above).
 		 * 
-		 * Weakly typed setters and getters are still available, but their use is descouraged, especially in loops. 
+		 * In an attempt to conserve memory, version 2.0 only accepts INTs as keys.
 		 */
 		function setInt (key : int, value : int, taxonomies : Vector.<uint> = null) : void;
 		function setUint (key : int, value : uint, taxonomies : Vector.<uint> = null) : void;
 		function setNumber (key : int, value : Number, taxonomies : Vector.<uint> = null) : void;
 		function setBool (key : int, value : Boolean, taxonomies : Vector.<uint> = null) : void;
 		function setStr (key : int, value : String, taxonomies : Vector.<uint> = null) : void;
-		function setIntVector (key : int, value : Vector.<int>, taxonomies : Vector.<uint> = null) : void;
-		function setUintVector (key : int, value : Vector.<uint>, taxonomies : Vector.<uint> = null) : void;
-		function setNumberVector (key : int, value : Vector.<Number>, taxonomies : Vector.<uint> = null) : void;
-		function setBoolVector (key : int, value : Vector.<Boolean>, taxonomies : Vector.<uint> = null) : void;
-		function setStrVector (key : int, value : Vector.<String>, taxonomies : Vector.<uint> = null) : void;
 		
-		function getIntVal (key : int) : int;
-		function getUintVal (key : int) : uint;
-		function getNumberVal (key : int) : Number;
-		function getBoolVal (key : int) : Boolean;
-		function getStrVal (key : int) : String;
-		function getIntVectorVal (key : int) : Vector.<int>;
-		function getUintVectorVal (key : int) : Vector.<uint>;
-		function getNumberVectorVal (key : int) : Vector.<Number>;
-		function getBoolVectorVal (key : int) : Vector.<Boolean>;
-		function getStrVectorVal (key : int) : Vector.<String>;
-		
-		/**
-		 * @see IDataElement.getContent()
-		 * @see IDataElement.setContent()
-		 */
-		function $set (key : int, value : Object,  taxonomies : Vector.<uint> = null) : void;
-		function $get (key : int) : Object;
+		function getInt (key : int) : int;
+		function getUint (key : int) : uint;
+		function getNumber (key : int) : Number;
+		function getBool (key : int) : Boolean;
+		function getStr (key : int) : String;
 
 		/**
-		 * New to 2.0. Deletes associated field (if any), and removes the key.
+		 * New to 2.0. Deletes associated value (if any), and removes the key.
 		 */
 		function $delete (key : int) : void;
 		
@@ -205,8 +187,8 @@ package ro.ciacob.desktop.data2 {
 		
 		/**
 		 * Version 2.0 dropped the binomial `content`-`metadata`, and replaced it with a basic taxonomical system,
-		 * where an arbitrary number of optional tags or categories can be attached to each defined field. They can
-		 * be used later on for filtering and grouping fields, regardless of their type, name or value. Tags must
+		 * where an arbitrary number of optional tags can be attached to each defined field. They can be used later
+		 * on for filtering and grouping fields, regardless of their type, name or value. Tags must
 		 * always be represented as unsigned integers.
 		 */
 		function getTaxonomies (forKey : int) : Vector.<uint>;
@@ -219,7 +201,7 @@ package ro.ciacob.desktop.data2 {
 		function changeTaxonomies (forKey : int, byRemoving : Vector.<uint>, byAdding : Vector.<uint> = null) : void;
 		
 		/**
-		 * Checks whether a field has the specified categories. The third argument should send values that `mean`:
+		 * Checks whether a field has the specified taxonomies. The third argument should send values that `mean`:
 		 * "all", "any", or "none" (negates all filters). Should default to "all".
 		 */
 		function hasTaxonomies (key : int, list : Vector.<uint>, logicalOperator : int) : Boolean;
@@ -230,9 +212,11 @@ package ro.ciacob.desktop.data2 {
 		/**
 		 * Version 2.0 dropped the distinction between `exporting` the data structure and `serializing` it. Consequently,
 		 * it dropped the "importer" & "exporter" concepts, and the need for a subclass to reimplement the 
-		 * serialization/deserialization methods in order to use various importers/exporters. Instead, there will be two
-		 * "stock" serialize/deserialize methods (supporting ByteArray and a Value Object out of the box) and two generic
-		 * methods accepting a `Function` object that actually performs the serialization/deserialization process.
+		 * serialization/deserialization methods in order to use various importers/exporters.
+		 * 
+		 * Instead, there will be two "stock" serialize/deserialize methods (supporting XML) and two generic 
+		 * serialize/deserialize methods accepting a `Function` object that actually performs the 
+		 * serialization/deserialization process.
 		 *   
 		 * @see `IDataElement.toSerialized()`
 		 * @see `IDataElement.fromSerialized()`
@@ -242,41 +226,38 @@ package ro.ciacob.desktop.data2 {
 		 * @deleted `IDataElement.empty()`
 		 * @deleted `IDataElement.populateWithDefaultData()`
 		 * 
-		 * Method `toBA()` serializes the current set into a ByteArray. The ability to omit certain sets and/or fields is new to 2.0.
+		 * Method `toXML()` serializes the current set into an XML document. The ability to omit certain subsets and/or fields is new to 2.0.
 		 * 
-		 * NOTE: fields set to be excludded will be omitted from all subsets, wherever they appear.
-		 * NOTE: version 2.0 dropped the any messaging/notification ability altogether. Therefore, since all the instances of the
-		 * IDataset implementors are now inert, the method `empty()` was also dropped. If one needs to start fresh, simply trashing the 
-		 * current dataset, creating a new one in its place and calling `from...()` on it will do.
+		 * NOTE: fields set to be excludded will be omitted from rootset and all subsets, wherever they appear.
+		 * 
+		 * NOTE: XML is a lossy format. Data accuracy is not preserved during serialization to a XML:
+		 * 	- (strong) typing is lost;
+		 * 	- Vector values are turned into XMLLists;
+		 * 	- subsets will be placed under an XML node, "children", which does not exist in the original dataset;
+		 * 	- explicit hierarchical information (e.g., $superset, $rootset, depth) is lost.
+		 * 
+		 * In the de-serialization process, a best-effort, heuristic recovery strategy is employed, so "deserializing"
+		 * XML documents that where not previously created by `toXML()` may fail.
+		 * 
+		 * NOTE: version 2.0 dropped any messaging/notification ability altogether. Therefore, since all the instances of the
+		 * IDataset implementors are now inert, the method `empty()` was also dropped. If one needs to start fresh, simply
+		 * trashing the current dataset, creating a new one in its place and calling `from...()` on it will do.
 		 */
-		function toBA (compress : Boolean = true, excludingSets:Vector.<IDataset> = null, excludingFields:Vector.<int> = null) : ByteArray;
+		function toXML (excludingSets:Vector.<IDataset> = null, excludingFields:Vector.<int> = null) : ByteArray;
 		
 		/**
 		 * Populates the current set from given ByteArray. Overrides any matching fields, and adds any new subsets after
 		 * existing ones.
 		 */
-		function fromBA (source : ByteArray, isCompressed : Boolean = true, excludingSets:Vector.<IDataset> = null, excludingFields:Vector.<int> = null) : void;
+		function fromXML (source : XML, excludingSets:Vector.<IDataset> = null, excludingFields:Vector.<int> = null) : void;
 		
 		/**
-		 * NOTE: the Value Object is a lossy format. Data accuracy is not preserved during serialization to a VO:
-		 * 	- (strong) typing is lost;
-		 * 	- Vector values are turned into Arrays;
-		 * 	- subsets will be placed under a property, "children", (which does not exist in the original dataset);
-		 * 	- explicit hierarchical information (e.g., $superset, $rootset, depth, ordinal) is lost.
-		 * 
-		 * In the de-serialization process, a best-effort, heuristic recovery strategy is employed, so "deserializing" VOs that where not
-		 * previously created by toVO may fail.
+		 * NOTE: the second argument is meant to encourage reusing existing "formatter" functions via parameterizing (rather
+		 * than writing custom serialization/deserialization code to handle even minor differeces). The function pointed to by the first
+		 * argument will receive as arguments the current set and the "...Params" Object, provided it is not `null`.  
 		 */
-		function toVO (excludingSets:Vector.<IDataset> = null, excludingFields:Vector.<int> = null) : Object;
-		function fromVO (source : Object, excludingSets:Vector.<IDataset> = null, excludingFields:Vector.<int> = null) : void;
-		
-		/**
-		 * NOTE: the second argument is meant to encourage reusing existing "formatters" or "interpreters", via parameterizing (rather
-		 * than writing custom serialization/deserialization code to handle even minor differeces. The function pointed to by the first
-		 * argument will receive as arguments the current set and the "instructions" Object, provided it is not `null`.  
-		 */
-		function toCustomFormat (formatter : Function, instructions : Object = null) : Object;
-		function fromCustomFormat (interpreter : Function, instructions : Object = null) : void;
+		function toCustomFormat (formatter : Function, formatterParams : Object = null) : Object;
+		function fromCustomFormat (interpreter : Function, interpreterParams : Object = null) : void;
 		
 		/**
 		 * Not present in IDataElement, but available "de facto" in the 1.1 implementation. Cloning a set creats an identical
@@ -294,6 +275,8 @@ package ro.ciacob.desktop.data2 {
 		/**
 		 * Provided the current set is a `linked clone` (see above) of another set, calling this method will remove the dependency,
 		 * allowing one to trash the original without destroying the clone too.
+		 * 
+		 * NOTE: This will effectivelly copy all fields to the clone, possibly consuming significant ammounts of RAM or CPU.
 		 */
 		function unlink () : void;
 		
@@ -324,19 +307,21 @@ package ro.ciacob.desktop.data2 {
 		
 		/**
 		 * Finds out whether the current "state" of the dataset (i.e., its entirety of fields and their respective values, recursivelly
-		 * includding subsets) is the same as at the time a particular report was recorded. The suggested implementation uses the
-		 * linked-clone mechanism. 
+		 * includding subsets) is the same as at the time a particular report was recorded. This will essentially be true if (1) all changes
+		 * recorded in the report are traceable in the dataset's current "state", AND (2.1) there are no reports concerning any other changes, 
+		 * OR, (2.2) if there are, they were susequent changes that eventually cancelled out one another (e.g., a = 1, a = 2, a = 1); 
 		 */
 		function hasSameStateAs (report : IDatasetReport) : Boolean;
 		
 		/**
-		 * Enforces the current state of the dataset to be that of the given report.
+		 * Enforces the current state of the dataset to be that of the given report. Runs in reverse through all the reports in-between and
+		 * reverts all changes made.
 		 */
 		function toStateOfReport (report : IDatasetReport) : void;
 		
 		/**
-		 * Removes reports that more recent than a given time. This is commonly requested in linear undo-redo implementations (the "redo" history
-		 * is cleared when the user "un-does", then makes a change).
+		 * Removes reports that are more recent than a given time. This is commonly requested in linear undo-redo implementations (the "redo"
+		 * history is cleared when the user "un-does", then makes a change).
 		 */
 		function clearReportsAfter (timestamp : Number) : void;
 		
@@ -346,59 +331,27 @@ package ro.ciacob.desktop.data2 {
 		function clearAllReports () : void;
 		
 		/**
-		 * Limits the number of report records to be kept in memory. By default, all records should be kept.
+		 * Limits the number of report records to be kept in memory. By default, all records shall be kept.
 		 */
 		function set maxReports (value : int) : void;
 		
 		
-		// MEMORY & DISC ACCESS
+		// DISC ACCESS
 		
 		/**
-		 * Reads or initializes a file on disk to persist data changes into. This method needs to be called before any operation
-		 * (it is recommended for the implementors to throw otherwise). Also establishes the method to be used for handling data,
-		 * both volatile & persisted.
+		 * Version 2.0 uses SQLite to persist data. Most of the arguments used here are for specific use of Adobe AIR SQLite implementation. Thus,
+		 * this method essentially opens a connection to the database.
 		 * 
-		 * @param file 				File where to persist data. Must be writable.
-		 * 
-		 * @param useCompression	Whether to store the file on disk in a compressed format (LZMA used in 2.0). Defaults to false. This 
-		 * 							conserves disk space, but has a number of implications (see notes).
-		 * 
-		 * @param ioStrategy 		Decides whether to work with data in-memory, direct from disk (headers will have to be loaded,
-		 * 							though), or to use a combination between the two. The argument should send values that refer to each
-		 * 							of these modes, the third being the default. Suggested constant names are "MEMORY", "DISK", "BALANCED".
-		 * 
-		 * @param maxMemory
-		 * @param targetDiscNumRw	Optional settings for the "balanced" mode. Suggested is that either memory or disc read-write operations
-		 * 							limit is given, but if given both, memory settings will take precedence. Defaults should impose a
-		 * 							512 Mb memory limit, and no limit on disk access frequency.
-		 * 
-		 * NOTES:
-		 * If the `ioStrategy` is set to "DISK" or "BALANCED", and the `useCompression` flag is set, then a temporary uncompressed version of the
-		 * `file` will be written to disc at the start of the session (then compressed back and moved over the original at session end). The 
-		 * decompressing process will need to temporarily store in-memory the full (uncompressed) data before writing it to disk, so this may
-		 * temporarily ocupy significant memory for large datasets. Also, as the process is synchronous, it may introduce some lag with each
-		 * `openSession()` and `closeSession()` call. However, on-demand disk write operations do not involve compression nor decompression,
-		 * as they operate on the temporary, uncompressed file instead. 
+		 * NOTE: as to stay true to the "inert" nature of this class, we do not provide a way to operate the underlying SQLite in asynchronous
+		 * mode, even if the platforms gives this option (as doing so will involve dealing with events). The "accessMode" parameter takes values
+		 * from the flash.data.SQLMode class. 
 		 */
-		function openSession (file : File, useCompression : Boolean = false, ioStrategy : int = -1, maxMemory : int = -1, targetDiscNumRw : int = -1) : void;
+		function openSession (file : File, useEncryption : Boolean = false, accessMode : String = null) : void;
 		
 		/**
-		 * Commits changes to disk (also compressing them if compression is used), and prepares the current set (and all its subsets) for garbage
-		 * collection. It is acceptable to immediately start a new session on the same instance, with identical or changed settings. Calling any method
-		 * with no open session should throw.
-		 * 
-		 * NOTE:
-		 * Commiting to disc is synchronous, so the user should expect a possible lag. Closing session is intended to be an application exit
-		 * operation. For customary, on-demand writing to disk, use `persist()`.
+		 * Closes the current connection to the database (see notes for "openSession").
 		 */
 		function closeSession () : void;
-		
-		/**
-		 * Persists the current dataset to disk. The suggested approach is to only write the bytes that actually changed, and to commit to the 
-		 * temporary (uncompressed) file while using compression, so that the operation is fast as possible (despite the fact that it is 
-		 * synchronous).
-		 */
-		function persist() : void;
 
 	}
 }

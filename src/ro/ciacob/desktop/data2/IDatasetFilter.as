@@ -3,7 +3,7 @@ package ro.ciacob.desktop.data2
 	public interface IDatasetFilter
 	{
 		/**
-		 * The key of a field; in 2.0 keys are expressed as an integers.
+		 * The key of a field; in 2.0 keys are expressed as integers.
 		 */
 		function get key () : uint;
 		function set key (value : uint) : void;

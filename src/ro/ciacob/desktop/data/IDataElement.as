@@ -1,7 +1,5 @@
 package ro.ciacob.desktop.data {
 	import flash.utils.ByteArray;
-	
-	import ro.ciacob.desktop.signals.IObserver;
 
 	public interface IDataElement {
 
