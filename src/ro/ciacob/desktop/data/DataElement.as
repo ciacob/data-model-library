@@ -148,7 +148,7 @@ package ro.ciacob.desktop.data {
 //			dupplicate.fromSerialized(serializedSelf)
 //			return dupplicate;
 			
-			return ByteArrays.cloneObject (this) as IDataElement;
+			return IDataElement (ByteArrays.cloneObject (this));
 		}
 
 		/**
