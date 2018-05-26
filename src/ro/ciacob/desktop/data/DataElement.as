@@ -29,7 +29,7 @@ package ro.ciacob.desktop.data {
 	 * @author Claudius Tiberiu Iacob
 	 * @email claudius.iacob@gmail.com
 	 */
-	public class DataElement implements IDataElement {
+	public class DataElement {
 
 		private static const DATA_ELEMENT_ALIAS:String = getQualifiedClassName(DataElement);
 
@@ -40,7 +40,7 @@ package ro.ciacob.desktop.data {
 
 
 		/**
-		 * Default implementation for <code>IDataElement</code> - consult for more
+		 * Default implementation for <code>DataElement</code> - consult for more
 		 * information.
 		 *
 		 * @param	initialMetadata
@@ -53,7 +53,7 @@ package ro.ciacob.desktop.data {
 		 * 			Consult <code>PlainObjectImporter</code> for details about the
 		 * 			expected data structure.
 		 *
-		 * @see IDataElement
+		 * @see DataElement
 		 * @see ro.ciacob.desktop.data.importers.PlainObjectImporter
 		 */
 		public function DataElement(initialMetadata:Object = null, initialContent:Object =
@@ -75,14 +75,14 @@ package ro.ciacob.desktop.data {
 		public var _ownFlatElementsMap:Object;
 
 		/**
-		 * Adds the provided <code>IDataElement</code> as a last child. If it was
+		 * Adds the provided <code>DataElement</code> as a last child. If it was
 		 * previously parented by some other element, it is first deleted there. If it is
 		 * already a child of this element, nothing happens.
 		 *
 		 * @param	child
 		 * 			The child to be added.
 		 */
-		public function addDataChild(child:IDataElement):void {
+		public function addDataChild(child:DataElement):void {
 			addDataChildAt(child, numDataChildren);
 		}
 
@@ -101,12 +101,12 @@ package ro.ciacob.desktop.data {
 		 * 			an error will be thrown.
 		 *
 		 */
-		public function addDataChildAt(child:IDataElement, atIndex:int):void {
+		public function addDataChildAt(child:DataElement, atIndex:int):void {
 			if (atIndex > numDataChildren) {
 				throw(new Error('\nDataElement - addChildAt(): Cannot add a child at index ' +
 					atIndex + '. Maximum allowed index is ' + numDataChildren + ', because the children list cannot be sparse.\n'));
 			}
-			var parentOfChild:IDataElement = child.dataParent;
+			var parentOfChild:DataElement = child.dataParent;
 			if (parentOfChild == this) {
 				return;
 			}
@@ -134,15 +134,15 @@ package ro.ciacob.desktop.data {
 		 *
 		 * @return	A clone of this element.
 		 */
-		public function clone():IDataElement {
-			return IDataElement (ByteArrays.cloneObject (this));
+		public function clone():DataElement {
+			return DataElement (ByteArrays.cloneObject (this));
 		}
 
 		/**
 		 * Returns the parent of this element, or null if it has none.
 		 * Root and orphaned elements will return `null`.
 		 */
-		public function get dataParent():IDataElement {
+		public function get dataParent():DataElement {
 			if (DataKeys.PARENT in _metadata) {
 				return _metadata[DataKeys.PARENT];
 			}
@@ -223,8 +223,8 @@ package ro.ciacob.desktop.data {
 		 * Returns the child currently found at the specified index, or null if no child
 		 * exists there.
 		 */
-		public function getDataChildAt(atIndex:int):IDataElement {
-			return _children[atIndex] as IDataElement;
+		public function getDataChildAt(atIndex:int):DataElement {
+			return _children[atIndex] as DataElement;
 		}
 
 		/**
@@ -236,7 +236,7 @@ package ro.ciacob.desktop.data {
 		 *
 		 * @return	The element with the matching route, or null if none is found.
 		 */
-		public function getElementByRoute(route:String):IDataElement {
+		public function getElementByRoute(route:String):DataElement {
 			return parentFlatElementsMap[route];
 		}
 
@@ -334,7 +334,7 @@ package ro.ciacob.desktop.data {
 		 *
 		 * @return	True if elements are equal, false otherwise.
 		 */
-		public function isEqualTo(otherElement:IDataElement):Boolean {
+		public function isEqualTo(otherElement:DataElement):Boolean {
 			if (otherElement === this) {
 				return true;
 			}
@@ -353,7 +353,7 @@ package ro.ciacob.desktop.data {
 		 * 
  		 * @return	True if elements are equivalent, false otherwise.
 		 */
-		public function isEquivalentTo(otherElement:IDataElement):Boolean {
+		public function isEquivalentTo(otherElement:DataElement):Boolean {
 			var ownKeys:Array = getContentKeys();
 			var testKeys:Array = otherElement.getContentKeys();
 			return Arrays.sortAndTestForIdenticPrimitives(ownKeys, testKeys);
@@ -408,7 +408,7 @@ package ro.ciacob.desktop.data {
 		 * 			The child to be deleted. If it is not a child of this implementor, an
 		 * 			error will the thrown.
 		 */
-		public function removeDataChild(child:IDataElement):void {
+		public function removeDataChild(child:DataElement):void {
 			var childIndex:int = _children.indexOf(child);
 			if (childIndex == -1) {
 				throw(new Error('DataElement - removeChild(): element set to be removed is not a child of this parent.'));
@@ -431,7 +431,7 @@ package ro.ciacob.desktop.data {
 		 * 			at the supplied index, an error will be thrown.
 		 */
 		public function removeDataChildAt(atIndex:int):void {
-			var child:IDataElement = IDataElement(_children[atIndex]);
+			var child:DataElement = DataElement(_children[atIndex]);
 			removeDataChild(child);
 		}
 
@@ -518,7 +518,7 @@ package ro.ciacob.desktop.data {
 				callback.apply({}, [this]);
 			}
 			for (var i:int = 0; i < numDataChildren; i++) {
-				var child:IDataElement = getDataChildAt(i);
+				var child:DataElement = getDataChildAt(i);
 				child.walk(callback);
 			}
 		}
@@ -596,7 +596,7 @@ package ro.ciacob.desktop.data {
 		/**
 		 * Sets the parent of this element to the given value.
 		 */
-		ciacob function setParent(newParent:IDataElement):void {
+		ciacob function setParent(newParent:DataElement):void {
 			setIntrinsicMetadata(DataKeys.PARENT, newParent);
 		}
 		
@@ -604,14 +604,14 @@ package ro.ciacob.desktop.data {
 		 * Convenience way to get a hold of the root, from any leaf note that is connected to it.
 		 * Orphaned elements will return `null`.
 		 */
-		ciacob function get root () : IDataElement {
-			return (parentFlatElementsMap['-1'] as IDataElement);
+		ciacob function get root () : DataElement {
+			return (parentFlatElementsMap['-1'] as DataElement);
 		}
 
-		private function _fromByteArray(byteArray:ByteArray, recurse:Boolean = true, mustCreate:Boolean = false):IDataElement {
+		private function _fromByteArray(byteArray:ByteArray, recurse:Boolean = true, mustCreate:Boolean = false):DataElement {
 			var cls:Class = Object(this).constructor;
 			var fqn:String = getQualifiedClassName(this);
-			var target:IDataElement = mustCreate ? (new cls as IDataElement) : this;
+			var target:DataElement = mustCreate ? (new cls as DataElement) : this;
 			byteArray.uncompress();
 			byteArray.position = 0;
 			registerClassAlias(fqn, cls);
@@ -631,7 +631,7 @@ package ro.ciacob.desktop.data {
 				var childrenList:Array = srcData[DataKeys.CHILDREN];
 				for (var i:int = 0; i < childrenList.length; i++) {
 					var serializedChild:ByteArray = childrenList[i] as ByteArray;
-					var child:IDataElement = _fromByteArray(serializedChild, true, true);
+					var child:DataElement = _fromByteArray(serializedChild, true, true);
 					target.addDataChild(child);
 				}
 			}

@@ -1,7 +1,7 @@
 package ro.ciacob.desktop.data.importers {
 	import ro.ciacob.ciacob;
 	import ro.ciacob.desktop.data.DataElement;
-	import ro.ciacob.desktop.data.IDataElement;
+	import ro.ciacob.desktop.data.DataElement;
 	import ro.ciacob.desktop.data.constants.DataKeys;
 
 	use namespace ciacob;
@@ -11,13 +11,13 @@ package ro.ciacob.desktop.data.importers {
 		/**
 		 * @see ro.ciacob.lessonbuilder.model.importers.IImporter
 		 */
-		public function importData (data:*, intoStructure:IDataElement) : void {
+		public function importData (data:*, intoStructure:DataElement) : void {
 			// EXPLANATION: each child is structurally identical to the root. We grab the root's class definition
 			// and we use it to create new children.
 			var structureDefinition:Class = Class(Object(intoStructure).constructor);
 			var metaData : Object = data[DataKeys.METADATA];
 			if (metaData != null) {
-				if (intoStructure is IDataElement) {
+				if (intoStructure is DataElement) {
 					for (var metaKey:String in metaData) {
 						if (Object(intoStructure).
 							hasOwnProperty('ciacob::setIntrinsicMetadata')) {
@@ -27,7 +27,7 @@ package ro.ciacob.desktop.data.importers {
 							setIntrinsicMetadata.
 								apply(this, [metaKey, metaData[metaKey]]);
 						} else {
-							IDataElement(intoStructure).
+							DataElement(intoStructure).
 								setMetadata(metaKey, metaData[metaKey]);
 						}
 					}
@@ -44,8 +44,8 @@ package ro.ciacob.desktop.data.importers {
 			if (childrenList != null) {
 				for (var i:int = 0; i < childrenList.length; i++) {
 					var childDataToImport:Object = childrenList[i];
-					var child:IDataElement =
-						IDataElement(new structureDefinition);
+					var child:DataElement =
+						DataElement(new structureDefinition);
 					importData(childDataToImport, child);
 					intoStructure.addDataChild(child);
 				}

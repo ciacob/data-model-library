@@ -1,13 +1,13 @@
 package ro.ciacob.desktop.data.exporters {
 	import ro.ciacob.ciacob;
-	import ro.ciacob.desktop.data.IDataElement;
+	import ro.ciacob.desktop.data.DataElement;
 	import ro.ciacob.desktop.data.constants.DataKeys;
 
 	use namespace ciacob;
 
 	public class PlainObjectExporter implements IExporter {
 		
-		public function export(data:IDataElement, shallow : Boolean = false):* {
+		public function export(data:DataElement, shallow : Boolean = false):* {
 			var result:Object = {};
 			result[DataKeys.METADATA] = {};
 			var metaKeys : Array = data.getMetaKeys();
@@ -30,7 +30,7 @@ package ro.ciacob.desktop.data.exporters {
 			result[DataKeys.CHILDREN] = [];
 			if (!shallow) {
 				for (var j:int = 0; j < data.numDataChildren; j++) {
-					var childItem : IDataElement = IDataElement(data.getDataChildAt(j));			
+					var childItem : DataElement = DataElement(data.getDataChildAt(j));			
 					var childItemExported:Object = export (childItem);
 					result[DataKeys.CHILDREN][j] = childItemExported;
 				}

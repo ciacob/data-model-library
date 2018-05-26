@@ -1,19 +1,19 @@
 package ro.ciacob.desktop.data.exporters {
-	import ro.ciacob.desktop.data.IDataElement;
+	import ro.ciacob.desktop.data.DataElement;
 
 	/**
-	 * Implementors will be responsible with converting IDataElement structures into
+	 * Implementors will be responsible with converting DataElement structures into
 	 * various formats.
 	 */
 	public interface IExporter {
 		/**
-		 * Takes a (possibly) hierarchical IDataElement structure, converts it
+		 * Takes a (possibly) hierarchical DataElement structure, converts it
 		 * into a different format and returns the result.
 		 * 
 		 * @param	data
 		 * 			The structure to be converted.
 		 * @return	The converted result. 
 		 */
-		function export (data : IDataElement, shallow : Boolean = false) : *;
+		function export (data : DataElement, shallow : Boolean = false) : *;
 	}
 }

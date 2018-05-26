@@ -1,5 +1,5 @@
 package ro.ciacob.desktop.data.debug {
-	import ro.ciacob.desktop.data.IDataElement;
+	import ro.ciacob.desktop.data.DataElement;
 	import ro.ciacob.utils.Strings;
 
 	/**
@@ -14,16 +14,16 @@ package ro.ciacob.desktop.data.debug {
 	 * 			produce a string that will be inserted into each `ELEMENT`
 	 * 			description. The function's signature must be:
 	 *
-	 * 			function (element : IDataElement) : String
+	 * 			function (element : DataElement) : String
 	 */
 	public final class Print {
 		
 		private static const INDENT:String = '    ';
 		
-		public static function output(element:IDataElement, summarisation:Function =
+		public static function output(element:DataElement, summarisation:Function =
 			null):void {
 			trace('\n');
-			element.walk(function(child:IDataElement):void {
+			element.walk(function(child:DataElement):void {
 				var padding:String = Strings.repeatString('    ', child.level);
 				var childRoute:String = child.route;
 				var summary:String = '';
@@ -43,7 +43,7 @@ package ro.ciacob.desktop.data.debug {
 			});
 		}
 		
-		public static function outputLegacy(element:IDataElement):void {
+		public static function outputLegacy(element:DataElement):void {
 			trace(_indent(element.level), 'Printing element: ', element);
 			var metaKeys:Array = element.getMetaKeys();
 			if (metaKeys.length > 0) {
