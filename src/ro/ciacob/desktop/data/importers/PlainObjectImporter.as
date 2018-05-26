@@ -1,7 +1,6 @@
 package ro.ciacob.desktop.data.importers {
 	import ro.ciacob.ciacob;
 	import ro.ciacob.desktop.data.DataElement;
-	import ro.ciacob.desktop.data.DataElement;
 	import ro.ciacob.desktop.data.constants.DataKeys;
 
 	use namespace ciacob;

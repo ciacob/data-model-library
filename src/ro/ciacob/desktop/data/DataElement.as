@@ -40,9 +40,8 @@ package ro.ciacob.desktop.data {
 
 
 		/**
-		 * Default implementation for <code>DataElement</code> - consult for more
-		 * information.
-		 *
+		 * @constructor
+		 * 
 		 * @param	initialMetadata
 		 * 			Optional. Initial metadata to populate the element about to be created.
 		 * 			Consult <code>PlainObjectImporter</code> for details about the
@@ -53,12 +52,8 @@ package ro.ciacob.desktop.data {
 		 * 			Consult <code>PlainObjectImporter</code> for details about the
 		 * 			expected data structure.
 		 *
-		 * @see DataElement
-		 * @see ro.ciacob.desktop.data.importers.PlainObjectImporter
 		 */
-		public function DataElement(initialMetadata:Object = null, initialContent:Object =
-			null) {
-			//_observer = new Observer;
+		public function DataElement(initialMetadata:Object = null, initialContent:Object = null) {
 			if (initialMetadata != null) {
 				_importInitialMetadata(initialMetadata);
 			}
@@ -75,7 +70,7 @@ package ro.ciacob.desktop.data {
 		public var _ownFlatElementsMap:Object;
 
 		/**
-		 * Adds the provided <code>DataElement</code> as a last child. If it was
+		 * Adds the provided element as a last child. If it was
 		 * previously parented by some other element, it is first deleted there. If it is
 		 * already a child of this element, nothing happens.
 		 *
