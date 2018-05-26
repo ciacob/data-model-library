@@ -17,36 +17,17 @@ package ro.ciacob.desktop.data {
 	use namespace ciacob;
 
 	/**
-	 * This is a generic data model, very scalable, and covering a fairly
-	 * large range of the real-world data storage requirements. This
-	 * implementation provides you the ability to:
+	 * This is a generic data model that provides one the ability to:
 	 *
-	 * <ul>
-	 * 		<li>represent both flat and hierarchical data structures;</li>
+	 * 		- represent both flat and hierarchical data structures;
+	 * 		- define and load some default, hardcodded content into the structure;
+	 * 		- serialize/deserialize the content into a proprietary, built-in format;
+	 * 		- hooks to import/export the content from/into third party formats;
 	 *
-	 * 		<li>define and load some default, hardcodded content into the structure;</li>
-	 *
-	 * 		<li>serialize/deserialize the content into a proprietary,
-	 * 		<strong>built-in</strong> format;</li>
-	 *
-	 * 		<li>easily import/export the content from/into third party formats;</li>
-	 *
-	 * 		<li>optimize computationally intensive code by isolating changes,
-	 * 		wherever applicable - e.g.: you get a <strong>specific notification</strong>
-	 * 		that a child has been added or removed, as opposed to a generic notification
-	 * 		that something has changed.</li>
-	 * </ul>
-	 *
-	 * Note:
-	 * This implementation relies on <code>IObserver</code> for registering and
-	 * broadcasting notifications, instead of being an <code>IEventDispatcher</code>.
-	 *
-	 * @see IObserver
-	 * @version 1.1
+	 * @version 1.2
+	 * @author ciacob
 	 * @author Claudius Tiberiu Iacob
 	 * @email claudius.iacob@gmail.com
-	 *
-	 * @author ciacob
 	 */
 	public class DataElement implements IDataElement {
 
@@ -94,14 +75,31 @@ package ro.ciacob.desktop.data {
 		public var _ownFlatElementsMap:Object;
 
 		/**
-		 * @inheritDoc
+		 * Adds the provided <code>IDataElement</code> as a last child. If it was
+		 * previously parented by some other element, it is first deleted there. If it is
+		 * already a child of this element, nothing happens.
+		 *
+		 * @param	child
+		 * 			The child to be added.
 		 */
 		public function addDataChild(child:IDataElement):void {
 			addDataChildAt(child, numDataChildren);
 		}
 
 		/**
-		 * @inheritDoc
+		 * Adds the provided child to this element at the specified index. If the child
+		 * was previously parented by some other element, it is first deleted there.
+		 * If it is already a child of this element, nothing happens.
+		 *
+		 * @param	child
+		 * 			The child to be added.
+		 * @param	index
+		 * 			The index to add the child at, zero based. The list of children cannot
+		 * 			be sparse. If `index` is equal to the current number of
+		 * 			children, an extra position will be appended for the new child.
+		 * 			If `index` is greater than the current number of children,
+		 * 			an error will be thrown.
+		 *
 		 */
 		public function addDataChildAt(child:IDataElement, atIndex:int):void {
 			if (atIndex > numDataChildren) {
@@ -121,7 +119,8 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Determines whether this element is allowed to have children. Default
+		 * implementation always returns `true`, override to customize.
 		 */
 		public function get canHaveChildren():Boolean {
 			return true;
@@ -140,7 +139,8 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Returns the parent of this element, or null if it has none.
+		 * Root and orphaned elements will return `null`.
 		 */
 		public function get dataParent():IDataElement {
 			if (DataKeys.PARENT in _metadata) {
@@ -150,25 +150,37 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Convenience way for erasing all children.
 		 */
 		public function empty():void {
 			_children = [];
 		}
 
 		/**
-		 * @inheritDoc
+		 * The default implementation does nothing. Override to implement this method,
+		 * the way that it exports the current element into some third-party format, at
+		 * your discretion.
+		 *
+		 * @param	format
+		 * 			A name for the third-party format you export into (e.g., XML, JSON, etc).
+		 *
+		 * @param	resources
+		 * 			This is just a handy way of injecting whatever data or functionality
+		 * 			you need into your function, at run-time.
+		 *
+		 * @return	The exported output. The precise format is discretionary to your
+		 * 			implementation.
 		 */
 		public function exportToFormat(format:String, resources:* = null):* {
-			throw(new Error('\nDataElement - exportToFormat(): You must implement this ' +
-				'function by\noverriding it into your own subclass. Use either ' +
-				'`getMetadata()`,\n`getContent()`, `getChildAt()`, or if you want the ' +
-				'`toSerialized()`\nmethods to obtain the content that you\'ll then ' +
-				'parse and export.\n'));
+			throw (new Error ('DataElement - exportToFormat(): Not implemented. You can implement this function by overriding it in your subclass.'));
 		}
 
 		/**
-		 * @inheritDoc
+		 * Populates this element from a value previously returned by the `toSerialized()`
+		 * method.
+		 *
+		 * @param	serialized
+		 * 			The serialized value to populate the element from.
 		 */
 		public function fromSerialized(serialized:ByteArray):void {
 			_fromByteArray(ByteArray(serialized));
@@ -176,42 +188,77 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Gets the content corresponding to the given key.
+		 *
+		 * @param	key
+		 * 			The key corresponding to the content to retrieve.
+		 *
+		 * @return	The content corresponding to the given key, or null.
 		 */
 		public function getContent(key:String):* {
 			return _content[key];
 		}
 
+		/**
+		 * Gets all content keys available.
+		 *
+		 * @return	An array containing strings, one for each key registered in the
+		 * 			content realm. Keys are returned in alphabetical order.
+		 */
 		public function getContentKeys():Array {
 			var keys:Array = Objects.getKeys(_content);
 			keys.sort();
 			return keys;
 		}
 
+		/**
+		 * Returns a copy of this element's content values, indexed by their respective
+		 * keys, in a value object.
+		 */
 		public function getContentMap():Object {
 			return ObjectUtil.copy(_content);
 		}
 
 		/**
-		 * @inheritDoc
+		 * Returns the child currently found at the specified index, or null if no child
+		 * exists there.
 		 */
 		public function getDataChildAt(atIndex:int):IDataElement {
 			return _children[atIndex] as IDataElement;
 		}
 
 		/**
-		 * @inheritDoc
+		 * Returns an element, given its `route` property. The lookup include all
+		 * descendants of this element, and the element itself.
+		 *
+		 * @param	route
+		 * 			The route of an element to look up;
+		 *
+		 * @return	The element with the matching route, or null if none is found.
 		 */
 		public function getElementByRoute(route:String):IDataElement {
 			return parentFlatElementsMap[route];
 		}
 
+		/**
+		 * Gets all metadata keys available.
+		 *
+		 * @return	An array containing strings, one for each key registered in the
+		 * 			metadata realm. Keys are retrieven in alphabetical order.
+		 */
 		public function getMetaKeys():Array {
-			return Objects.getKeys(_metadata);
+			var keys : Array = Objects.getKeys(_metadata);
+			keys.sort();
+			return keys;
 		}
 
 		/**
-		 * @inheritDoc
+		 * Gets the metadata corresponding to the given key.
+		 *
+		 * @param	key
+		 * 			A Key corresponding to some metadata to retrieve.
+		 *
+		 * @return	The metadata corresponding to the given key, or null if none is found.
 		 */
 		public function getMetadata(key:String):* {
 			return _metadata[key];
@@ -224,7 +271,7 @@ package ro.ciacob.desktop.data {
 		 * @param	keyName
 		 * 			The key to look up.
 		 *
-		 * @return	True, if the key exists, either with a value set or not.
+		 * @return	True, if the key exists, false otherwise.
 		 */
 		public function hasContentKey(keyName:String):Boolean {
 			if (keyName in _content) {
@@ -234,40 +281,40 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * Convenience batch job for setting content stored in a given object. A single `change notification`
-		 * will be triggered when the batch is completed, and that only if specifically requested.
+		 * Convenience batch job for setting content stored in a given object.
 		 *
 		 * @param	content
 		 * 			The object to import from.
 		 *
 		 * @param	overwrite
 		 * 			Whether to overwrite existing keys (true, default), or skip them.
-		 *
-		 * @param	notifyWhenDone
-		 * 			Whether to dispatch a notification when importing is done (dispatched, anyway,
-		 * 			only if any changes actually took place). Defaults to false.
 		 */
-		public function importContent(content:Object, overwrite:Boolean = true, notifyWhenDone:Boolean =
-			false):void {
-			var madeChanges:Boolean = false;
+		public function importContent(content:Object, overwrite:Boolean = true):void {
 			for (var key:String in content) {
 				var value:Object = content[key];
 				if (!(key in _content) || overwrite) {
 					_content[key] = value;
-					madeChanges = true;
 				}
 			}
 		}
 
 		/**
-		 * @inheritDoc
+		 * The default implementation does nothing. Override to implement this method,
+		 * the way that  it populates the current element with content it parses from some
+		 * third-party format, at your discretion.
+		 * 
+		 * @param	format
+		 * 			A name for the third-party format you import from (e.g., XML, JSON, etc);
+		 *
+		 * @param	content
+		 * 			The content that is to be parsed and imported.
 		 */
 		public function importFromFormat(format:String, content:*):void {
-			throw(new Error('\nDataElement - importFromFormat(): You must implement this function by\noverriding it into your own subclass. Use `setContent()`,\n`addChild()`, `addChildAt()` to bring the data into the current\nelement after you imported and parsed it.\n'));
+			throw(new Error('DataElement - importFromFormat(): Not implemented. You can implement this function by overriding it in your subclass.'));
 		}
 
 		/**
-		 * @inheritDoc
+		 * Returns the current index of this element within his parent children list. Root and orphaned elements return -1.
 		 */
 		public function get index():int {
 			if (DataKeys.INDEX in _metadata) {
@@ -277,9 +324,10 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * Tests for equality this element to another one. The two will be equal if:
+		 * Tests this element for equality to another one. The two will be equal if:
 		 * - they point to the same instance, OR;
-		 * - their serialized form is identical.
+		 * - by serializing both as Objects, the resulting Objects compare as equal by
+		 *   `ObjectUtil.compare()`.
 		 *
 		 * @param	otherElement
 		 * 			An element to test for equality
@@ -297,7 +345,13 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Checks whether this element has exactly the same set of keys as 
+		 * another one.
+		 * 
+		 * @param	otherElement
+		 * 			An element to test for equivalence
+		 * 
+ 		 * @return	True if elements are equivalent, false otherwise.
 		 */
 		public function isEquivalentTo(otherElement:IDataElement):Boolean {
 			var ownKeys:Array = getContentKeys();
@@ -306,7 +360,9 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Returns the current nesting level of this element. Root and orphaned
+		 * elements return 0. The level reported can be `-1`, if no such
+		 * information was ever stored on this element.
 		 */
 		public function get level():int {
 			if (DataKeys.LEVEL in _metadata) {
@@ -316,23 +372,23 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Returns the current number of children of this element.
 		 */
 		public function get numDataChildren():int {
 			return _children.length;
 		}
 
 		/**
-		 * @inheritDoc
+		 * The default implementation does nothing. Override to implement this method,
+		 * the way that it populates the current element with some default, content.
 		 */
 		public function populateWithDefaultData(details:* = null):void {
-			throw(new Error('\nDataElement - populateWithDefaultContent(): You must implement this\nfunction by overriding it into your own subclass. Use `setContent()`,\n`addChild()`, `addChildAt()` to bring your default data into the\ncurrent element.\n'));
+			throw (new Error ('DataElement - populateWithDefaultContent(): You can implement this function by overriding it in your subclass.'));
 		}
 
 
 		/**
 		 * Unsets a key's value and removes the key altogether.
-		 * TODO: add this to the IDataElement interface.
 		 *
 		 * @param	key
 		 * 			The key to remove content of.
@@ -345,12 +401,17 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Deletes the provided child, shifting the indexes of all subsequent children
+		 * in the list, if any.
+		 *
+		 * @param	child
+		 * 			The child to be deleted. If it is not a child of this implementor, an
+		 * 			error will the thrown.
 		 */
 		public function removeDataChild(child:IDataElement):void {
 			var childIndex:int = _children.indexOf(child);
 			if (childIndex == -1) {
-				throw(new Error('\nDataElement - removeChild(): child set to be removed is not a child of this element.\n'));
+				throw(new Error('DataElement - removeChild(): element set to be removed is not a child of this parent.'));
 			}
 			delete parentFlatElementsMap[child.route];
 			DataElement(child).setIndex(-1);
@@ -362,7 +423,12 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Deletes the child found at the specified index, shifting the indexes of all subsequent
+		 * children in the list, if any.
+		 *
+		 * @param	index
+		 * 			The index to delete the child at, zero based. If no child is to be found
+		 * 			at the supplied index, an error will be thrown.
 		 */
 		public function removeDataChildAt(atIndex:int):void {
 			var child:IDataElement = IDataElement(_children[atIndex]);
@@ -370,7 +436,14 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Builds and returns a `route` to this element, by concatenating the
+		 * local `index` of each ancestor, in turn.
+		 *
+		 * For example: The string `-1_0_1_3` is the route to the fourth child
+		 * of the second child of the first child of a parentless element (possibly the
+		 * root).
+		 *
+		 * Root and orphaned elements return the string `-1`.
 		 */
 		public function get route():String {
 			if (DataKeys.ROUTE in _metadata) {
@@ -380,16 +453,32 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Sets the content corresponding to the given key.
+		 *
+		 * @param	key
+		 * 			A key to associate with the new content to set.
+		 * 
+		 * @param	content
+		 * 			The new content to be set. Must be AMF3 serializable, or
+		 * 			an error will be thrown.
 		 */
-		public function setContent(key:String, content:*):void {
+		public function setContent (key:String, content : *) : void {
 			if (Objects.hasCustomType(content)) {
-				throw(new Error('\nDataElement - setContent(): you can only set primitives, arrays or simple objects, nested to any level.\n'));
+				throw (new Error ('DataElement - setContent(): content is not AMF3 serializable. Try to use primitives.'));
 			}
 			_content[key] = content;
 		}
 
-		public function setMetadata(key:String, metadata:*):void {
+		/**
+		 * Sets the metadata corresponding to the given key.
+		 *
+		 * @param	key
+		 * 			A Key corresponding to some metadata to set.
+		 *
+		 * @param	metadata
+		 * 			A value to associate to the metadata being set.
+		 */
+		public function setMetadata (key:String, metadata:*):void {
 			if (READONLY_KEYS.indexOf(key) == -1) {
 				_metadata[key] = metadata;
 				resetIntrinsicMeta();
@@ -397,25 +486,34 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @inheritDoc
+		 * Recursively serializes this element, using the built-in format. The resulting
+		 * value can be fed back into the `fromSerialized()` method of this, or another
+		 * element, to re-create the same data structure.
+		 *
+		 * In the process, the tree of children is recreated instead of cloned,
+		 * which involves reparenting the elements as needed.
+		 *
+		 * The default implementation uses a compressed `ByteArray` as a serialization 
+		 * medium.
+		 *
+		 * @return	The serialized form of this element.
 		 */
 		public function toSerialized():ByteArray {
 			return _toByteArray();
 		}
 
 		/**
-		 * @inheritDoc
+		 * Returns the qualified class name and route of this element.
 		 */
 		public function toString():String {
 			return ('').concat('[', getQualifiedClassName(this), '] [', route, ']');
 		}
 
-
-
 		/**
-		 * @inheritDoc
+		 * Walks the element's tree of children, calling a given callback function on each
+		 * one of them. The function will receive each child in turn as its sole argument.
 		 */
-		public function walk(callback:Function):void {
+		public function walk (callback:Function):void {
 			if (callback != null) {
 				callback.apply({}, [this]);
 			}
@@ -426,7 +524,8 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @private
+		 * Returns the `index` of the given element, provided it is a child of this one.
+		 * Returns `-1` if the given element is not in this element's children list.
 		 */
 		ciacob function getChildIndex(child:DataElement):int {
 			if (numDataChildren == 0) {
@@ -451,7 +550,8 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @private
+		 * Recursivelly rebuilds the `index`, `route` and `level` for this element and its
+		 * descendants.
 		 */
 		ciacob function resetIntrinsicMeta():void {
 
@@ -480,21 +580,21 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * @private
+		 * Sets the `index` of this element to the given value.
 		 */
 		ciacob function setIndex(newIndex:int):void {
 			setIntrinsicMetadata(DataKeys.INDEX, newIndex);
 		}
 
 		/**
-		 * @private
+		 * Sets a metadata value, includding for reserved keys.
 		 */
-		ciacob function setIntrinsicMetadata(key:String, metadata:*):void {
+		ciacob function setIntrinsicMetadata (key:String, metadata:*):void {
 			_metadata[key] = metadata;
 		}
 
 		/**
-		 * @private
+		 * Sets the parent of this element to the given value.
 		 */
 		ciacob function setParent(newParent:IDataElement):void {
 			setIntrinsicMetadata(DataKeys.PARENT, newParent);
@@ -508,8 +608,7 @@ package ro.ciacob.desktop.data {
 			return (parentFlatElementsMap['-1'] as IDataElement);
 		}
 
-		private function _fromByteArray(byteArray:ByteArray, recurse:Boolean = true, mustCreate:Boolean =
-			false):IDataElement {
+		private function _fromByteArray(byteArray:ByteArray, recurse:Boolean = true, mustCreate:Boolean = false):IDataElement {
 			var cls:Class = Object(this).constructor;
 			var fqn:String = getQualifiedClassName(this);
 			var target:IDataElement = mustCreate ? (new cls as IDataElement) : this;
