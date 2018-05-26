@@ -17,6 +17,9 @@ package ro.ciacob.desktop.data.debug {
 	 * 			function (element : IDataElement) : String
 	 */
 	public final class Print {
+		
+		private static const INDENT:String = '    ';
+		
 		public static function output(element:IDataElement, summarisation:Function =
 			null):void {
 			trace('\n');
@@ -38,6 +41,42 @@ package ro.ciacob.desktop.data.debug {
 				trace(padding + '[ELEMENT ' + summary + childRoute + ']');
 				trace(padding + '         ' + contentDump.join('\n' + padding + '         '));
 			});
+		}
+		
+		public static function outputLegacy(element:IDataElement):void {
+			trace(_indent(element.level), 'Printing element: ', element);
+			var metaKeys:Array = element.getMetaKeys();
+			if (metaKeys.length > 0) {
+				trace(_indent(element.level), 'METADATA');
+				for each (var metaKey:String in metaKeys) {
+					trace(_indent(element.level), metaKey, '=>', element.getMetadata(metaKey));
+				}
+			} else {
+				trace(_indent(element.level), 'NO METADATA');
+			}
+			var contentKeys:Array = element.getContentKeys();
+			if (contentKeys.length > 0) {
+				trace(_indent(element.level), 'CONTENT');
+				for each (var contentKey:String in contentKeys) {
+					trace(_indent(element.level), contentKey, '=>', element.getContent(contentKey));
+				}
+			} else {
+				trace(_indent(element.level), 'NO CONTENT');
+			}
+			var numChildren:int = element.numDataChildren;
+			if (numChildren > 0) {
+				trace(_indent(element.level), 'CHILDREN (', element.numDataChildren, ')');
+				for (var i:int = 0; i < numChildren; i++) {
+					outputLegacy(element.getDataChildAt(i));
+				}
+			} else {
+				trace(_indent(element.level), 'NO CHILDREN');
+			}
+			trace(_indent(element.level), 'Finished printing element.\n');
+		}
+		
+		private static function _indent(toLevel:int):String {
+			return Strings.repeatString(INDENT, toLevel);
 		}
 	}
 }

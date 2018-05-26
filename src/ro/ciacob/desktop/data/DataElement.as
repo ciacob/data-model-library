@@ -118,7 +118,6 @@ package ro.ciacob.desktop.data {
 			_children.splice(atIndex, 0, child);
 			DataElement(child).setParent(this);
 			resetIntrinsicMeta();
-//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.ADD, child, this));
 		}
 
 		/**
@@ -166,7 +165,6 @@ package ro.ciacob.desktop.data {
 		 */
 		public function empty():void {
 			_children = [];
-//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.REFRESH, null, this));
 		}
 
 		/**
@@ -186,7 +184,6 @@ package ro.ciacob.desktop.data {
 		public function fromSerialized(serialized:ByteArray):void {
 			_fromByteArray(ByteArray(serialized));
 			resetIntrinsicMeta();
-//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.REFRESH, null, this));
 		}
 
 		/**
@@ -409,7 +406,6 @@ package ro.ciacob.desktop.data {
 			DataElement(child).setIntrinsicMetadata(DataKeys.ROUTE, '-1');
 			_children.splice(childIndex, 1);
 			resetIntrinsicMeta();
-//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.REMOVE, child, this));
 		}
 
 		/**
@@ -452,14 +448,12 @@ package ro.ciacob.desktop.data {
 				throw(new Error('\nDataElement - setContent(): you can only set primitives, arrays or simple objects, nested to any level.\n'));
 			}
 			_content[key] = content;
-//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.CHANGE, this, this));
 		}
 
 		public function setMetadata(key:String, metadata:*):void {
 			if (READONLY_KEYS.indexOf(key) == -1) {
 				_metadata[key] = metadata;
 				resetIntrinsicMeta();
-//				notifyChange(DataChangeDetail.MODEL_METADATA_CHANGED, this, new DataChangeDetail(DataChangeDetail.CHANGE, this, this));
 			}
 		}
 
@@ -490,7 +484,6 @@ package ro.ciacob.desktop.data {
 		 */
 		public function triggerNotification():void {
 			_forcingNotification = true;
-//			notifyChange(DataChangeDetail.MODEL_CONTENT_CHANGED, this, new DataChangeDetail(DataChangeDetail.REFRESH, null, this));
 			_forcingNotification = false;
 		}
 
