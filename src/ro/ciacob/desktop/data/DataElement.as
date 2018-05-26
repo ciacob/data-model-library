@@ -56,7 +56,7 @@ package ro.ciacob.desktop.data {
 			INDEX, DataKeys.LEVEL, DataKeys.METADATA, DataKeys.PARENT, DataKeys.ROUTE, DataKeys.
 			SOURCE];
 
-		private static var _forcingNotification:Boolean;
+
 
 		/**
 		 * Default implementation for <code>IDataElement</code> - consult for more
@@ -132,21 +132,10 @@ package ro.ciacob.desktop.data {
 		 * Cloned elements are orphaned (their `dataParent` field is `null`)
 		 * and have identical (but unrelated, i.e., they point to different
 		 * object instances) children to the original.
-
-		 * @paramt	shallow
-		 * 			If true, children of the element will be omitted from the
-		 * 			cloned element. Default is false, which make children be
-		 * 			includded.
 		 *
 		 * @return	A clone of this element.
 		 */
-		public function clone(shallow:Boolean = false):IDataElement {
-//			var classDef:Class = Object(this).constructor;
-//			var dupplicate:IDataElement = new classDef;
-//			var serializedSelf:ByteArray = this.toSerialized();
-//			dupplicate.fromSerialized(serializedSelf)
-//			return dupplicate;
-			
+		public function clone():IDataElement {
 			return IDataElement (ByteArrays.cloneObject (this));
 		}
 
@@ -268,9 +257,6 @@ package ro.ciacob.desktop.data {
 					madeChanges = true;
 				}
 			}
-			if (madeChanges && notifyWhenDone) {
-				triggerNotification();
-			}
 		}
 
 		/**
@@ -319,10 +305,6 @@ package ro.ciacob.desktop.data {
 			return Arrays.sortAndTestForIdenticPrimitives(ownKeys, testKeys);
 		}
 
-//		public function isObserving(changeType:String):Boolean {
-//			return _observer.isObserving(changeType);
-//		}
-
 		/**
 		 * @inheritDoc
 		 */
@@ -336,35 +318,9 @@ package ro.ciacob.desktop.data {
 		/**
 		 * @inheritDoc
 		 */
-//		public function notifyChange (changeType:String, ... details):void {
-//			details.unshift(changeType);
-//			if (_autoBroadcast || _forcingNotification) {
-//				
-//				// Broadcast on current level
-//				_observer.notifyChange.apply(this, details);
-//				
-//				// Broadcast on higher levels
-//				var parentElement:IDataElement = this.dataParent;
-//				while (parentElement != null) {
-//					parentElement.notifyChange.apply(parentElement, details);
-//					parentElement = parentElement.dataParent;
-//				}
-//			}
-//		}
-
-		/**
-		 * @inheritDoc
-		 */
 		public function get numDataChildren():int {
 			return _children.length;
 		}
-
-		/**
-		 * @inheritDoc
-		 */
-//		public function observe(changeType:String, callback:Function):void {
-//			_observer.observe(changeType, callback);
-//		}
 
 		/**
 		 * @inheritDoc
@@ -381,13 +337,10 @@ package ro.ciacob.desktop.data {
 		 * @param	key
 		 * 			The key to remove content of.
 		 */
-		public function removeContent(key:String, notify:Boolean = false):void {
+		public function removeContent(key:String):void {
 			if (key in _content) {
 				_content[key] = null;
 				delete _content[key];
-			}
-			if (notify) {
-				triggerNotification();
 			}
 		}
 
@@ -427,20 +380,6 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * When set to false, notifications to the outer world will not be sent
-		 * as the DataElement gets modified. Use `triggerNotification()` as an
-		 * alternative.
-		 *
-		 */
-//		public function setAutoBroadcastMode(mode:Boolean):void {
-//			_autoBroadcast = mode;
-//		}
-
-//		public function getAutoBroadcastMode() : Boolean {
-//			return _autoBroadcast;
-//		}
-
-		/**
 		 * @inheritDoc
 		 */
 		public function setContent(key:String, content:*):void {
@@ -460,13 +399,6 @@ package ro.ciacob.desktop.data {
 		/**
 		 * @inheritDoc
 		 */
-//		public function stopObserving(changeType:String = null, callback:Function = null):void {
-//			_observer.stopObserving(changeType, callback);
-//		}
-
-		/**
-		 * @inheritDoc
-		 */
 		public function toSerialized():ByteArray {
 			return _toByteArray();
 		}
@@ -478,14 +410,7 @@ package ro.ciacob.desktop.data {
 			return ('').concat('[', getQualifiedClassName(this), '] [', route, ']');
 		}
 
-		/**
-		 * Useful to manually trigger a notification when `autoBroadcast` is set
-		 * to false.
-		 */
-		public function triggerNotification():void {
-			_forcingNotification = true;
-			_forcingNotification = false;
-		}
+
 
 		/**
 		 * @inheritDoc
@@ -573,30 +498,6 @@ package ro.ciacob.desktop.data {
 		 */
 		ciacob function setParent(newParent:IDataElement):void {
 			setIntrinsicMetadata(DataKeys.PARENT, newParent);
-		}
-
-		/**
-		 * Sets content without triggering any notification at all, not even the intrinsic
-		 * ones. Especially suitable in loops, provided that "triggerNotification" is manually
-		 * called at some point later, so the outer world does eventually know that something
-		 * has been changed.
-		 *
-		 * Note:
-		 * Having "resetIntrinsicMeta()" blindly be called in each and every run of "notifyChange"
-		 * was a dreadful, and costly decision. There is no reason, for example, to reset index,
-		 * level and route, when only the content of the object changes. This, and similar
-		 * issues, call for a major re-engineering of this class.
-		 */
-		ciacob function silentlySetContent(key:String, content:*):void {
-			_content[key] = content;
-		}
-		
-		/**
-		 * Sets metadata without triggering any notification at all, not even the intrinsic
-		 * ones. See above.
-		 */
-		ciacob function silentlySetMetadata(key:String, meta:*):void {
-			_metadata[key] = meta;
 		}
 		
 		/**
