@@ -5,16 +5,16 @@ package ro.ciacob.desktop.data {
 	
 	import mx.utils.ObjectUtil;
 	
-	import ro.ciacob.ciacob;
+	import avmplus.getQualifiedClassName;
+	
 	import ro.ciacob.desktop.data.constants.DataKeys;
+	import ro.ciacob.desktop.data.debug.Print;
 	import ro.ciacob.desktop.data.exporters.IExporter;
 	import ro.ciacob.desktop.data.exporters.PlainObjectExporter;
 	import ro.ciacob.utils.Arrays;
 	import ro.ciacob.utils.ByteArrays;
 	import ro.ciacob.utils.Objects;
 	import ro.ciacob.utils.constants.CommonStrings;
-
-	use namespace ciacob;
 
 	/**
 	 * This is a generic data model that provides one the ability to:
@@ -171,15 +171,19 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
+		 * DEPRECATED. Use DataElement.fromSerialized() instead.
 		 * Populates this element from a value previously returned by the `toSerialized()`
 		 * method.
 		 *
+		 * @deprecated Use DataElement.fromSerialized() instead.
+		 * 
 		 * @param	serialized
 		 * 			The serialized value to populate the element from.
 		 */
-		public function fromSerialized(serialized:ByteArray):void {
-			_fromByteArray(ByteArray(serialized));
+		public function _legacy_fromSerialized(serialized:ByteArray):DataElement {
+			var ret : DataElement = _legacy_fromByteArray(ByteArray(serialized));
 			resetIntrinsicMeta();
+			return ret;
 		}
 
 		/**
@@ -481,12 +485,9 @@ package ro.ciacob.desktop.data {
 		}
 
 		/**
-		 * Recursively serializes this element, using the built-in format. The resulting
-		 * value can be fed back into the `fromSerialized()` method of this, or another
-		 * element, to re-create the same data structure.
-		 *
-		 * In the process, the tree of children is recreated instead of cloned,
-		 * which involves reparenting the elements as needed.
+		 * Serializes this element, using the built-in format. The resulting
+		 * value can be fed back into the `fromSerialized()` method to re-create
+		 * the same data structure.
 		 *
 		 * The default implementation uses a compressed `ByteArray` as a serialization 
 		 * medium.
@@ -494,7 +495,14 @@ package ro.ciacob.desktop.data {
 		 * @return	The serialized form of this element.
 		 */
 		public function toSerialized():ByteArray {
-			return _toByteArray();
+			var srcClass : Class = (this as Object).constructor;
+			var srcAlias : String = getQualifiedClassName(srcClass);
+			registerClassAlias(srcAlias, srcClass);
+			var b:ByteArray = new ByteArray();
+			b.writeObject(this);
+			b.position = 0;
+			b.compress();
+			return b;
 		}
 
 		/**
@@ -522,7 +530,7 @@ package ro.ciacob.desktop.data {
 		 * Returns the `index` of the given element, provided it is a child of this one.
 		 * Returns `-1` if the given element is not in this element's children list.
 		 */
-		ciacob function getChildIndex(child:DataElement):int {
+		public function getChildIndex(child:DataElement):int {
 			if (numDataChildren == 0) {
 				return -1;
 			}
@@ -534,7 +542,7 @@ package ro.ciacob.desktop.data {
 		 * includding the element itself. This aims to speed up searching elements by
 		 * their route.
 		 */
-		ciacob function get parentFlatElementsMap():Object {
+		public function get parentFlatElementsMap():Object {
 			if (dataParent != null) {
 				return DataElement(dataParent).parentFlatElementsMap;
 			}
@@ -548,7 +556,7 @@ package ro.ciacob.desktop.data {
 		 * Recursivelly rebuilds the `index`, `route` and `level` for this element and its
 		 * descendants.
 		 */
-		ciacob function resetIntrinsicMeta():void {
+		public function resetIntrinsicMeta():void {
 
 			if (this.dataParent != null) {
 				
@@ -577,21 +585,21 @@ package ro.ciacob.desktop.data {
 		/**
 		 * Sets the `index` of this element to the given value.
 		 */
-		ciacob function setIndex(newIndex:int):void {
+		public function setIndex(newIndex:int):void {
 			setIntrinsicMetadata(DataKeys.INDEX, newIndex);
 		}
 
 		/**
 		 * Sets a metadata value, includding for reserved keys.
 		 */
-		ciacob function setIntrinsicMetadata (key:String, metadata:*):void {
+		public function setIntrinsicMetadata (key:String, metadata:*):void {
 			_metadata[key] = metadata;
 		}
 
 		/**
 		 * Sets the parent of this element to the given value.
 		 */
-		ciacob function setParent(newParent:DataElement):void {
+		public function setParent(newParent:DataElement):void {
 			setIntrinsicMetadata(DataKeys.PARENT, newParent);
 		}
 		
@@ -599,18 +607,49 @@ package ro.ciacob.desktop.data {
 		 * Convenience way to get a hold of the root, from any leaf note that is connected to it.
 		 * Orphaned elements will return `null`.
 		 */
-		ciacob function get root () : DataElement {
+		public function get root () : DataElement {
 			return (parentFlatElementsMap['-1'] as DataElement);
 		}
 
-		private function _fromByteArray(byteArray:ByteArray, recurse:Boolean = true, mustCreate:Boolean = false):DataElement {
-			var cls:Class = Object(this).constructor;
-			var fqn:String = getQualifiedClassName(this);
-			var target:DataElement = mustCreate ? (new cls as DataElement) : this;
-			byteArray.uncompress();
-			byteArray.position = 0;
+		/**
+		 * New, class agnostic method of producing a "live" instance from a serialized record. The serialization
+		 * medium is the compressed ByteArray.
+		 */
+		public static function fromSerialized (serialized:ByteArray, cls : Class = null, fqn : String = null) : Object {
+			if (cls && fqn) {
+				registerClassAlias(fqn, cls);
+			} else {
+				registerClassAlias(DATA_ELEMENT_ALIAS, DataElement);
+			}
+			serialized.uncompress();
+			serialized.position = 0;
+			var srcData : Object = serialized.readObject() as Object;
+			if (srcData is DataElement) {
+				return srcData;
+			}
+			return null;
+		}
+		
+		/*
+		 * @deprecated
+		 * TO BE REMOVED along with method `fromSerialized()`. Static method `DataElement.fromSerialized()` is to
+		 * be used instead.
+		 */
+		private function _legacy_fromByteArray (byteArray:ByteArray, recurse:Boolean = true, mustCreate:Boolean = false):DataElement {
+			var cls : Class = (this as Object).constructor;
+			var fqn : String = getQualifiedClassName(cls);
 			registerClassAlias(fqn, cls);
-			var srcData:Object = byteArray.readObject();
+			try {
+				byteArray.uncompress();
+			} catch (e : Error) {
+				// The byteArray might have already been uncompressed
+			}
+			byteArray.position = 0;
+			var srcData : Object = byteArray.readObject();
+			if (srcData is DataElement) {
+				return srcData as DataElement;
+			}
+			var target:DataElement = mustCreate ? (new cls as DataElement) : this;
 			if (Objects.isEmpty(srcData)) {
 				throw(new Error(fqn + '\n - fromByteArray(): deserializing given ByteArray produced an empty Object.\n'));
 			}
@@ -626,7 +665,7 @@ package ro.ciacob.desktop.data {
 				var childrenList:Array = srcData[DataKeys.CHILDREN];
 				for (var i:int = 0; i < childrenList.length; i++) {
 					var serializedChild:ByteArray = childrenList[i] as ByteArray;
-					var child:DataElement = _fromByteArray(serializedChild, true, true);
+					var child:DataElement = _legacy_fromByteArray(serializedChild, true, true);
 					target.addDataChild(child);
 				}
 			}
@@ -643,30 +682,6 @@ package ro.ciacob.desktop.data {
 			for (var srcMetaKey:String in metadata) {
 				_metadata[srcMetaKey] = metadata[srcMetaKey];
 			}
-		}
-
-		private function _toByteArray(recurse:Boolean = true):ByteArray {
-			var srcData:Object = {};
-			srcData[DataKeys.METADATA] = ObjectUtil.copy(_metadata);
-			delete srcData[DataKeys.METADATA][DataKeys.PARENT];
-			delete srcData[DataKeys.METADATA][DataKeys.INDEX];
-			delete srcData[DataKeys.METADATA][DataKeys.LEVEL];
-			delete srcData[DataKeys.METADATA][DataKeys.ROUTE];
-			srcData[DataKeys.CONTENT] = ObjectUtil.copy(_content);
-			srcData[DataKeys.CHILDREN] = [];
-			if (recurse) {
-				var srcChildren:Array = _children.concat();
-				for (var j:int = 0; j < srcChildren.length; j++) {
-					var childItem:DataElement = DataElement(srcChildren[j]);
-					var childItemSerialized:ByteArray = childItem._toByteArray(true);
-					srcData['children'][j] = childItemSerialized;
-				}
-			}
-			var byteArray:ByteArray = new ByteArray;
-			registerClassAlias(DATA_ELEMENT_ALIAS, DataElement);
-			byteArray.writeObject(srcData);
-			byteArray.compress();
-			return byteArray;
 		}
 	}
 }
