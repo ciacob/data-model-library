@@ -13,8 +13,16 @@ package ro.ciacob.desktop.data.exporters {
 		 * 
 		 * @param	data
 		 * 			The structure to be converted.
+		 * 
+		 * @param	shallow
+		 * 			If set, shall not recursivelly descend into children
+		 * 
+		 * @param	isRecursiveCall
+		 * 			Recursive calls can set this argument to `true`, so that initialization tasks can be performed on
+		 * 			the initial (originar) call of the function.
+		 * 
 		 * @return	The converted result. 
 		 */
-		function export (data : DataElement, shallow : Boolean = false) : *;
+		function export (data : DataElement, shallow : Boolean = false, isRecursiveCall : Boolean = false) : *;
 	}
 }

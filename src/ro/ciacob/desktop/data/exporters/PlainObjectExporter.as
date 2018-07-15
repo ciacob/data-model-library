@@ -7,7 +7,7 @@ package ro.ciacob.desktop.data.exporters {
 
 	public class PlainObjectExporter implements IExporter {
 		
-		public function export(data:DataElement, shallow : Boolean = false):* {
+		public function export(data:DataElement, shallow : Boolean = false, isRecursiveCall : Boolean = false):* {
 			var result:Object = {};
 			result[DataKeys.METADATA] = {};
 			var metaKeys : Array = data.getMetaKeys();

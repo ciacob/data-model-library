@@ -5,10 +5,7 @@ package ro.ciacob.desktop.data {
 	
 	import mx.utils.ObjectUtil;
 	
-	import avmplus.getQualifiedClassName;
-	
 	import ro.ciacob.desktop.data.constants.DataKeys;
-	import ro.ciacob.desktop.data.debug.Print;
 	import ro.ciacob.desktop.data.exporters.IExporter;
 	import ro.ciacob.desktop.data.exporters.PlainObjectExporter;
 	import ro.ciacob.utils.Arrays;
@@ -62,11 +59,9 @@ package ro.ciacob.desktop.data {
 			}
 		}
 
-//		public var _autoBroadcast:Boolean = true;
 		public var _children:Array = [];
 		public var _content:Object = {};
 		public var _metadata:Object = {};
-		//public var _observer:Observer;
 		public var _ownFlatElementsMap:Object;
 
 		/**
@@ -379,7 +374,7 @@ package ro.ciacob.desktop.data {
 
 		/**
 		 * The default implementation does nothing. Override to implement this method,
-		 * the way that it populates the current element with some default, content.
+		 * the way that it populates the current element with some default content.
 		 */
 		public function populateWithDefaultData(details:* = null):void {
 			throw (new Error ('DataElement - populateWithDefaultContent(): You can implement this function by overriding it in your subclass.'));
@@ -413,7 +408,7 @@ package ro.ciacob.desktop.data {
 				throw(new Error('DataElement - removeChild(): element set to be removed is not a child of this parent.'));
 			}
 			delete parentFlatElementsMap[child.route];
-			DataElement(child).setIndex(-1);
+			DataElement(child).enforceIndex(-1);
 			DataElement(child).setParent(null);
 			DataElement(child).setIntrinsicMetadata(DataKeys.LEVEL, -1);
 			DataElement(child).setIntrinsicMetadata(DataKeys.ROUTE, '-1');
@@ -561,7 +556,7 @@ package ro.ciacob.desktop.data {
 			if (this.dataParent != null) {
 				
 				// Index
-				setIndex(DataElement(dataParent).getChildIndex(this));
+				enforceIndex(DataElement(dataParent).getChildIndex(this));
 				
 				// Route
 				var myRoute : String = DataElement(dataParent).route.concat(CommonStrings.UNDERSCORE, this.index);	
@@ -571,7 +566,7 @@ package ro.ciacob.desktop.data {
 				var routeSegments:Array = myRoute.split(CommonStrings.UNDERSCORE);
 				setIntrinsicMetadata(DataKeys.LEVEL, routeSegments.length - 1);
 			} else {
-				setIndex(-1);
+				enforceIndex(-1);
 				setIntrinsicMetadata(DataKeys.ROUTE, -1);
 				setIntrinsicMetadata(DataKeys.LEVEL, 0);
 			}
@@ -584,9 +579,59 @@ package ro.ciacob.desktop.data {
 
 		/**
 		 * Sets the `index` of this element to the given value.
+		 * 
+		 * @param	An index to enforce on this element.
+		 * 
+		 * @param	doReorderSiblings
+		 * 			Tells the parent to reorder its children so that the change in index becomes effective.
+		 * 			Default false.
+		 * 
+		 * @param	sanitizeIndex
+		 * 			Enforce legit boundaries on the given `newIndex` and avoids the situation where two children
+		 * 			have the same index by swaping indices. Default false.
+		 * 
+		 * NOTE: despite the fact that both `doReorderSiblings` and `sanitizeIndex` should be TRUE to maintain data integrity
+		 * at all time, they are FALSE by default for legacy reasons, this function being mostly used in loops (where the extra 
+		 * checks incur speed penalties). The is also a standalone `reorderSiblings()` function, that can be called after 
+		 * indices are changed in batch. 
 		 */
-		public function setIndex(newIndex:int):void {
+		public function enforceIndex (newIndex:int, doReorderSiblings : Boolean = false, sanitizeIndex : Boolean = false) : void {
+			if (newIndex == index) {
+				return;
+			}
+			if (sanitizeIndex) {
+				
+				// Ensure legit bounds
+				if (newIndex < 0) {
+					newIndex = 0;
+				}
+				if (dataParent) {
+					if (newIndex > dataParent._children.length - 1) {
+						newIndex = dataParent._children.length - 1;
+					}
+					
+					// Give own, current index to the sibling whose index `newIndex` overlaps.
+					// Practically, swap the indices in order to avoid the situation where two
+					// children have the same index.
+					if (dataParent._children[newIndex] !== undefined) {
+						var replacementIndex : int = index;
+						(dataParent._children[newIndex] as DataElement).enforceIndex(replacementIndex);
+					}
+				}
+			}
 			setIntrinsicMetadata(DataKeys.INDEX, newIndex);
+			if (doReorderSiblings) {
+				reorderSiblings();
+			}
+		}
+		
+		/**
+		 * Causes all the children of the parent of this element to be reordered based on their index.
+		 */
+		public function reorderSiblings () : void {
+			if (dataParent) {
+				dataParent._children.sort(_sortChildrenByIndex);
+			}
 		}
 
 		/**
@@ -682,6 +727,13 @@ package ro.ciacob.desktop.data {
 			for (var srcMetaKey:String in metadata) {
 				_metadata[srcMetaKey] = metadata[srcMetaKey];
 			}
+		}
+		
+		private function _sortChildrenByIndex (childA : DataElement, childB : DataElement) : int {
+			var a : int = childA.index;
+			var b : int = childB.index;
+			var ret : int = (a == -1 || b == -1)? 0 : a - b;
+			return ret;
 		}
 	}
 }
