@@ -588,11 +588,11 @@ package ro.ciacob.desktop.data {
 		 * 
 		 * @param	sanitizeIndex
 		 * 			Enforce legit boundaries on the given `newIndex` and avoids the situation where two children
-		 * 			have the same index by swaping indices. Default false.
+		 * 			have the same index by shifting indices. Default false.
 		 * 
 		 * NOTE: despite the fact that both `doReorderSiblings` and `sanitizeIndex` should be TRUE to maintain data integrity
 		 * at all time, they are FALSE by default for legacy reasons, this function being mostly used in loops (where the extra 
-		 * checks incur speed penalties). The is also a standalone `reorderSiblings()` function, that can be called after 
+		 * checks incurs speed penalties). There is also a standalone `reorderSiblings()` function, that can be called after 
 		 * indices are changed in batch. 
 		 */
 		public function enforceIndex (newIndex:int, doReorderSiblings : Boolean = false, sanitizeIndex : Boolean = false) : void {
@@ -610,12 +610,31 @@ package ro.ciacob.desktop.data {
 						newIndex = dataParent._children.length - 1;
 					}
 					
-					// Give own, current index to the sibling whose index `newIndex` overlaps.
-					// Practically, swap the indices in order to avoid the situation where two
-					// children have the same index.
-					if (dataParent._children[newIndex] !== undefined) {
-						var replacementIndex : int = index;
-						(dataParent._children[newIndex] as DataElement).enforceIndex(replacementIndex);
+					// Shift indices if any overlapping occurs
+					var shiftStep : int = ((newIndex - index) < 0)? 1 : ((newIndex - index) > 0)? -1 : 0;
+					if (shiftStep) {
+						var shiftStart : int = newIndex;
+						var shiftEnd : int = index;
+						if (dataParent._children[newIndex] !== undefined) {
+							var i : int;
+							var replacementIndex : int;
+							
+							// Shifting to left
+							if (shiftStep > 0) {
+								for (i = shiftStart; i < shiftEnd; i += shiftStep) {
+									replacementIndex = (i + shiftStep);
+									(dataParent._children[i] as DataElement).enforceIndex(replacementIndex);
+								}
+							}
+							
+							// Shifting to right
+							else {
+								for (i = shiftStart; i > shiftEnd; i += shiftStep) {
+									replacementIndex = (i + shiftStep);
+									(dataParent._children[i] as DataElement).enforceIndex(replacementIndex);
+								}
+							}
+						}
 					}
 				}
 			}
