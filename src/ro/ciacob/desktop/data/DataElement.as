@@ -45,14 +45,13 @@ package ro.ciacob.desktop.data {
 
         /**
          * Returns the current nesting level of this element. Root and orphaned
-         * elements return 0. The level reported can be `-1`, if no such
-         * information was ever stored on this element.
+         * elements return 0.
          */
         public function get level():int {
             if (DataKeys.LEVEL in _metadata) {
                 return _metadata[DataKeys.LEVEL];
             }
-            return -1;
+            return 0;
         }
 
         /**
@@ -192,7 +191,6 @@ package ro.ciacob.desktop.data {
             }
             _children.splice(atIndex, 0, child);
             DataElement(child).setParent(this);
-            resetIntrinsicMeta();
         }
 
         /**
@@ -594,19 +592,21 @@ package ro.ciacob.desktop.data {
          * Sets the `index` of this element to the given value.
          *
          * @param    newIndex
-         *            An index to enforce on this element.
+         *           An index to enforce on this element. The resulting metadata change applies regardless of
+         *           whether this element has a data parent.
          *
          * @param    doReorderSiblings
-         *            Tells the parent to reorder its children so that the change in index becomes effective.
-         *            Default false.
+         *           Tells the parent to reorder its children so that the change in index becomes effective.
+         *           Only applies if this element has a data parent. Default `false`.
          *
          * @param    sanitizeIndex
-         *            Enforce legit boundaries on the given `newIndex` and avoids the situation where two children
-         *            have the same index by shifting indices. Default false.
+         *           Enforce legit boundaries on the given `newIndex` and avoids the situation where two children
+         *           have the same index by shifting indices. Except for fixing negative indices, the rest of fixes only
+         *           apply if this element has a data parent. Default `false`.
          *
          * NOTE: despite the fact that both `doReorderSiblings` and `sanitizeIndex` should be TRUE to maintain data integrity
          * at all time, they are FALSE by default for legacy reasons, this function being mostly used in loops (where the extra
-         * checks incurs speed penalties). There is also a standalone `reorderSiblings()` function, that can be called after
+         * checks incur speed penalties). There is also a standalone `reorderSiblings()` function, that can be called after
          * indices are changed in batch.
          */
         public function enforceIndex(newIndex:int, doReorderSiblings:Boolean = false, sanitizeIndex:Boolean = false):void {
@@ -676,27 +676,60 @@ package ro.ciacob.desktop.data {
         }
 
         /**
-         * Sets the parent of this element to the given value.
+         * Sets the parent of this element to the given value, while ensuring data integrity.
+         * @param   newParent
+         *          The new DataElement to set as parent of this current element. Value `null` is
+         *          acceptable.
+         *
+         * @param   doCheckHierarchy
+         *          Whether to run checks to detect cyclic references. Default `true`. If engaged,
+         *          the attempt to set a descendant as a parent anywhere in the upper hierarchy
+         *          will cause the method to return `false` with no changes made.
+         *
+         * @param   doResetMeta
+         *          Whether to reset the meta information from the new parent downwards. Default
+         *          `true`. Should always be true, except in loops, where `resetIntrinsicMeta()`
+         *          should be manually called at the end of the loop.
+         *
+         * @return  Returns `true` if setting the parent succeeded, or false otherwise. For all practical
+         *          purposes, this means that `true` is only returned if `doCheckCyclic` is `true` and
+         *          provided `newParent` passes the cyclic reference tests; or, tests couldn't be run
+         *          (e.g., because `newParent` was null), or `doCheckCyclic` was `false`.
          */
-        public function setParent(newParent:DataElement):void {
-            setIntrinsicMetadata(DataKeys.PARENT, newParent);
+        public function setParent(newParent:DataElement, doCheckCyclic:Boolean = true, doResetMeta:Boolean = true):Boolean {
+            var result:Boolean = true;
+            if (doCheckCyclic && newParent && newParent.route && this.route) {
+                result = (newParent.route.indexOf(this.route) !== 0);
+            }
+            if (result) {
+                setIntrinsicMetadata(DataKeys.PARENT, newParent);
+                if (doResetMeta) {
+                    if (newParent) {
+                        newParent.resetIntrinsicMeta();
+                    } else {
+                        this.resetIntrinsicMeta();
+                    }
+                }
+            }
+            if (!result) {
+                trace('DataElement: `setParent()` - Setting a descendant as parent was prevented.');
+            }
+            return result;
         }
-
-
 
         /**
          * New, class-agnostic method of producing a "live" instance from a serialized record. The serialization
          * medium is the compressed ByteArray.
          * @param   serialized
          *          ByteArray containing a serialized DataElement (or a subclass of it).
-         * 
+         *
          * @param   cls
          *          Class definition to use for registering the resulting Object under. If neither `cls` and
          *          `fqn` are given, `DataElement` and `ro.ciacob.desktop.data.DataElement` are assumed.
-         * 
+         *
          * @param   fqn
          *          Fully qualified class name to use for registering the resulting Object under.
-         * 
+         *
          * @return  The resulting DataElement (sub) class instance, or `null` on failure.
          */
         public static function fromSerialized(serialized:ByteArray, cls:Class = null, fqn:String = null):Object {
