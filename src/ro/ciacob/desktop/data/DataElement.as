@@ -17,7 +17,7 @@ package ro.ciacob.desktop.data {
      *        - represent both flat and hierarchical data structures;
      *        - define and load some default, hardcoded content into the structure;
      *        - serialize/deserialize the content into a proprietary, built-in format;
-     *        - import/export the content from/into third party formats, via dedicated hooks to.
+     *        - import/export the content from/into third party formats, via dedicated hooks.
      *
      * @version 1.2
      * @author ciacob
@@ -305,7 +305,7 @@ package ro.ciacob.desktop.data {
          * @return    The metadata corresponding to the given key, or null if none is found.
          */
         public function getMetadata(key:String):* {
-            return (key in _metadata) ? _metadata[key] : null;
+            return _metadata[key];
         }
 
         /**
@@ -455,7 +455,7 @@ package ro.ciacob.desktop.data {
             var child:DataElement = _children[atIndex] as DataElement;
             if (child) {
                 return removeDataChild(child);
-            }
+        }
             return null;
         }
 
@@ -596,11 +596,11 @@ package ro.ciacob.desktop.data {
          *           whether this element has a data parent.
          *
          * @param    doReorderSiblings
-         *           Tells the parent to reorder its children so that the change in index becomes effective.
+         *            Tells the parent to reorder its children so that the change in index becomes effective.
          *           Only applies if this element has a data parent. Default `false`.
          *
          * @param    sanitizeIndex
-         *           Enforce legit boundaries on the given `newIndex` and avoids the situation where two children
+         *            Enforce legit boundaries on the given `newIndex` and avoids the situation where two children
          *           have the same index by shifting indices. Except for fixing negative indices, the rest of fixes only
          *           apply if this element has a data parent. Default `false`.
          *
@@ -676,45 +676,10 @@ package ro.ciacob.desktop.data {
         }
 
         /**
-         * Sets the parent of this element to the given value, while ensuring data integrity.
-         * @param   newParent
-         *          The new DataElement to set as parent of this current element. Value `null` is
-         *          acceptable.
-         *
-         * @param   doCheckHierarchy
-         *          Whether to run checks to detect cyclic references. Default `true`. If engaged,
-         *          the attempt to set a descendant as a parent anywhere in the upper hierarchy
-         *          will cause the method to return `false` with no changes made.
-         *
-         * @param   doResetMeta
-         *          Whether to reset the meta information from the new parent downwards. Default
-         *          `true`. Should always be true, except in loops, where `resetIntrinsicMeta()`
-         *          should be manually called at the end of the loop.
-         *
-         * @return  Returns `true` if setting the parent succeeded, or false otherwise. For all practical
-         *          purposes, this means that `true` is only returned if `doCheckCyclic` is `true` and
-         *          provided `newParent` passes the cyclic reference tests; or, tests couldn't be run
-         *          (e.g., because `newParent` was null), or `doCheckCyclic` was `false`.
+         * Sets the parent of this element to the given value.
          */
-        public function setParent(newParent:DataElement, doCheckCyclic:Boolean = true, doResetMeta:Boolean = true):Boolean {
-            var result:Boolean = true;
-            if (doCheckCyclic && newParent && newParent.route && this.route) {
-                result = (newParent.route.indexOf(this.route) !== 0);
-            }
-            if (result) {
-                setIntrinsicMetadata(DataKeys.PARENT, newParent);
-                if (doResetMeta) {
-                    if (newParent) {
-                        newParent.resetIntrinsicMeta();
-                    } else {
-                        this.resetIntrinsicMeta();
-                    }
-                }
-            }
-            if (!result) {
-                trace('DataElement: `setParent()` - Setting a descendant as parent was prevented.');
-            }
-            return result;
+        public function setParent(newParent:DataElement):void {
+            setIntrinsicMetadata(DataKeys.PARENT, newParent);
         }
 
         /**
