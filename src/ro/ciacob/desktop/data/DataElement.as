@@ -43,15 +43,16 @@ package ro.ciacob.desktop.data {
             return _children.length;
         }
 
-        /**
+          /**
          * Returns the current nesting level of this element. Root and orphaned
-         * elements return 0.
+         * elements return 0. The level reported can be `-1`, if no such
+         * information was ever stored on this element.
          */
         public function get level():int {
             if (DataKeys.LEVEL in _metadata) {
                 return _metadata[DataKeys.LEVEL];
             }
-            return 0;
+            return -1;
         }
 
         /**
@@ -191,6 +192,7 @@ package ro.ciacob.desktop.data {
             }
             _children.splice(atIndex, 0, child);
             DataElement(child).setParent(this);
+             resetIntrinsicMeta();
         }
 
         /**
