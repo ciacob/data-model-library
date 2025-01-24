@@ -3,8 +3,12 @@ package ro.ciacob.desktop.data {
     import ro.ciacob.utils.Objects;
     import ro.ciacob.utils.Descriptor;
     import ro.ciacob.utils.Strings;
+    import flash.events.IEventDispatcher;
+    import flash.events.EventDispatcher;
+    import flash.events.Event;
+    import ro.ciacob.desktop.data.events.SelectableDataEvent;
 
-    public class SelectableDataElement extends DataElement {
+    public class SelectableDataElement extends DataElement implements IEventDispatcher {
         private static const OP_SELECT:String = 'select';
         private static const OP_UNSELECT:String = 'unselect';
 
@@ -12,7 +16,9 @@ package ro.ciacob.desktop.data {
         private var _isSelected:Boolean;
         private var _isSelectable:Boolean;
         private var _isUsingHighAnchor:Boolean;
-        private var _globalSelectionMap:Object;
+        private var _eventDispatcher:EventDispatcher;
+        
+        protected var _globalSelectionMap:Object;
 
         /**
          * Subclass of `DataElement` adding selection management capabilities.
@@ -34,6 +40,7 @@ package ro.ciacob.desktop.data {
                 initialMetadata:Object = null,
                 initialContent:Object = null) {
             super(initialMetadata, initialContent);
+            _eventDispatcher = new EventDispatcher(this);
             _usesNormalization = normalizeSelection;
         }
 
@@ -109,6 +116,41 @@ package ro.ciacob.desktop.data {
                 _globalSelectionMap = {};
             }
             return _globalSelectionMap;
+        }
+
+        /**
+         * @see flash.events.IEventDispatcher.addEventListener
+         */
+        public function addEventListener(type:String, listener:Function, useCapture:Boolean = false, priority:int = 0, useWeakReference:Boolean = false):void {
+            _eventDispatcher.addEventListener(type, listener, useCapture, priority, useWeakReference);
+        }
+
+        /**
+         * @see flash.events.IEventDispatcher.removeEventListener
+         */
+        public function removeEventListener(type:String, listener:Function, useCapture:Boolean = false):void {
+            _eventDispatcher.removeEventListener(type, listener, useCapture);
+        }
+
+        /**
+         * @see flash.events.IEventDispatcher.dispatchEvent
+         */
+        public function dispatchEvent(event:Event):Boolean {
+            return _eventDispatcher.dispatchEvent(event);
+        }
+
+        /**
+         * @see flash.events.IEventDispatcher.hasEventListener
+         */
+        public function hasEventListener(type:String):Boolean {
+            return _eventDispatcher.hasEventListener(type);
+        }
+
+        /**
+         * @see flash.events.IEventDispatcher.willTrigger
+         */
+        public function willTrigger(type:String):Boolean {
+            return _eventDispatcher.willTrigger(type);
         }
 
         /**
@@ -217,7 +259,7 @@ package ro.ciacob.desktop.data {
          *          Optional Array with `SelectableDataElement` instances that have been selected.
          */
         protected function _reportChanges(selectionAnchor:SelectableDataElement, unselected:Array = null, selected:Array = null):void {
-            // TODO: use a custom Event to dispatch this information (make the class an IEventDispatcher implementor).
+            dispatchEvent(new SelectableDataEvent(SelectableDataEvent.REPORT, selectionAnchor, unselected, selected));
         }
 
         /**
@@ -241,7 +283,7 @@ package ro.ciacob.desktop.data {
             // in depth-first-traversal order.
             var normalizedSet:Array = [];
             var sortedSet:Array = rawSet.concat();
-            sortedSet.sort(_routeComparison);
+            sortedSet.sort(_compareRoutes);
 
             // Get a hold of the highest level any of the sorted elements has. This is the
             // most deeply nested element among all received.
@@ -347,7 +389,7 @@ package ro.ciacob.desktop.data {
             _reportChanges(
                     (_isUsingHighAnchor ? _globalSelectionMap.highAnchor : _globalSelectionMap.lowAnchor) || null,
                     unselected.length ? unselected : null,
-                    unselected.length ? unselected : null
+                    selected.length ? selected : null
                 );
         }
 
@@ -388,7 +430,7 @@ package ro.ciacob.desktop.data {
             }
 
             // If ends were given in reverse order, temporarily change that.
-            var sortedSet:Array = srcSet.concat().sort(_routeComparison);
+            var sortedSet:Array = srcSet.concat().sort(_compareRoutes);
             var mustReverseOutput:Boolean = (sortedSet[0] !== srcSet[0]);
 
             // Walk the closest common ancestor and register all interim elements, including both
@@ -444,6 +486,8 @@ package ro.ciacob.desktop.data {
             }
             var commonPrefix:String = firstRoute.substring(0, i);
             if (!commonPrefix) {
+                trace('SelectableDataElement: `_getCommonAncestorOf()` - could not find common prefix of [',
+                        firstRoute, ',', lastRoute, ']. Using root instead.');
                 return SelectableDataElement(root);
             }
             if (Strings.endsWith(commonPrefix, '_')) {
@@ -451,7 +495,12 @@ package ro.ciacob.desktop.data {
             }
 
             // Return the element whose `route` matches the common prefix.
-            return SelectableDataElement(getElementByRoute(commonPrefix) || root);
+            var commonAncestor:DataElement = getElementByRoute(commonPrefix);
+            if (!commonAncestor) {
+                trace('SelectableDataElement: `_getCommonAncestorOf()` - route "', commonPrefix,
+                        '" did not resolve. Using root instead.');
+            }
+            return SelectableDataElement(commonAncestor || root);
         }
 
         /**
@@ -469,7 +518,7 @@ package ro.ciacob.desktop.data {
          *
          * @see     Array.prototype.sort
          */
-        protected function _routeComparison(elA:SelectableDataElement, elB:SelectableDataElement):int {
+        protected function _compareRoutes(elA:SelectableDataElement, elB:SelectableDataElement):int {
             return Descriptor.multiPartComparison(elA.route, elB.route);
         }
     }
