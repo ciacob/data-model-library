@@ -2,6 +2,7 @@ package ro.ciacob.desktop.data {
 
     import ro.ciacob.utils.Objects;
     import ro.ciacob.utils.Descriptor;
+    import ro.ciacob.utils.Strings;
 
     public class SelectableDataElement extends DataElement {
         private static const OP_SELECT:String = 'select';
@@ -215,8 +216,8 @@ package ro.ciacob.desktop.data {
          * @param   selected
          *          Optional Array with `SelectableDataElement` instances that have been selected.
          */
-        private function _reportChanges(selectionAnchor:SelectableDataElement, unselected:Array = null, selected:Array = null):void {
-            // TBD: use a custom Event to dispatch this information (make the class an IEventDispatcher implementor).
+        protected function _reportChanges(selectionAnchor:SelectableDataElement, unselected:Array = null, selected:Array = null):void {
+            // TODO: use a custom Event to dispatch this information (make the class an IEventDispatcher implementor).
         }
 
         /**
@@ -229,9 +230,63 @@ package ro.ciacob.desktop.data {
          *
          * @return  Normalized Array with `SelectableDataElement` instances.
          */
-        private function _doNormalization(rawSet:Array):Array {
-            // TODO: implement
-            return rawSet;
+        protected function _doNormalization(rawSet:Array):Array {
+
+            // Normalization makes no sense for lone elements or empty sets.
+            if (rawSet.length < 2) {
+                return rawSet;
+            }
+
+            // Sort elements, ancestors before descendants, earlier sibling before later sibling,
+            // in depth-first-traversal order.
+            var normalizedSet:Array = [];
+            var sortedSet:Array = rawSet.concat();
+            sortedSet.sort(_routeComparison);
+
+            // Get a hold of the highest level any of the sorted elements has. This is the
+            // most deeply nested element among all received.
+            var highestLevel:int = 0;
+            for (var i:int = 0; i < sortedSet.length; i++) {
+                var testEl:SelectableDataElement = sortedSet[i];
+                var testLevel:int = testEl.level;
+                if (testLevel > highestLevel) {
+                    highestLevel = testLevel;
+                }
+            }
+
+            // Find the closest common ancestor we can use as for traversal.
+            var commonAncestorEl:SelectableDataElement = _getCommonAncestorOf(sortedSet);
+
+            // Normalize to the highest level available by traversing the reference and only retaining
+            // its descendants living at the highest level, and which relate to or are among the received,
+            // original elements.
+            commonAncestorEl.walk(function visitElement(testDescendantEl:SelectableDataElement):void {
+                    if (testDescendantEl.level === highestLevel) {
+
+                        // Descendant was already in the original set.
+                        if (sortedSet.includes(testDescendantEl)) {
+                            if (!normalizedSet.includes(testDescendantEl)) {
+                                normalizedSet.push(testDescendantEl);
+                            }
+                            return;
+                        }
+
+                        // Descendant is a (grand)child of at least one of the elements in the original set.
+                        var matchesOriginalEl:Boolean = sortedSet.some(
+                                function checkElement(sortedElement:SelectableDataElement, ...ignore):Boolean {
+                                    return testDescendantEl.route.indexOf(sortedElement.route) == 0;
+                                }
+                            );
+                        if (matchesOriginalEl) {
+                            if (!normalizedSet.includes(testDescendantEl)) {
+                                normalizedSet.push(testDescendantEl);
+                            }
+                            return;
+                        }
+                    }
+                });
+
+            return normalizedSet;
         }
 
         /**
@@ -244,12 +299,12 @@ package ro.ciacob.desktop.data {
          * @param   ...elements
          *          Array of SelectableDataElement instances to operate on see `select()` or `unselect()` for details.
          */
-        private function _doOperation(changeType:String, elements:Array):void {
+        protected function _doOperation(changeType:String, elements:Array):void {
             var selected:Array = [];
             var unselected:Array = [];
             var changedRoutes:Array = [];
             var thisRoot:SelectableDataElement = SelectableDataElement(this.root);
-            var toChange:Array = elements.concat();
+            var toChange:Array = (elements || []).concat();
             if (!toChange.length) {
                 toChange.push(this);
             }
@@ -258,7 +313,7 @@ package ro.ciacob.desktop.data {
                         item.isSelectable && !(item.route in _globalSelectionMap) :
                         (changeType == OP_UNSELECT) ?
                         item.route in _globalSelectionMap : true;
-                    return (item && item.dataParent && item.root === thisRoot && changeSpecificChecks);
+                    return (item && item.root && item.root === thisRoot && changeSpecificChecks);
                 });
 
             if (_usesNormalization) {
@@ -302,20 +357,120 @@ package ro.ciacob.desktop.data {
          * from the *lower-index* element (higher in the hierarchy or an earlier sibling) to the *higher-index* one (lower
          * in the hierarchy, or a later sibling). If diverging, the resulting Array is then reversed to match the original
          * direction (`from` towards `to`).
-         * 
+         *
          * @param   to
          *          Terminus-point of the range.
-         * 
+         *
          * @param   from
          *          Starting point of the range.
-         * 
+         *
          * @return  Array with all elements of the range, including both ends. If `to` and `from` are identical, the Array
          *          contains a single element. Either is invalid (null, orphan, part of a different hierarchy), returned
          *          Array is empty.
          */
-        private function _buildRangeSet(to:SelectableDataElement, from:SelectableDataElement):Array {
-            // TODO: implement
-            return [from, to];
+        protected function _buildRangeSet(to:SelectableDataElement, from:SelectableDataElement):Array {
+
+            // Do an early exit if both ends are missing, both are orphaned or they belong to different hierarchies.
+            if ((!to && !from) || (!to.root && !from.root) || to.root !== from.root) {
+                return [];
+            }
+
+            // Do an early exit if only one end is valid (return it).
+            var srcSet:Array = [];
+            if (from && from.root) {
+                srcSet.push(from);
+            }
+            if (to && to.root) {
+                srcSet.push(to);
+            }
+            if (srcSet.length === 1) {
+                return [srcSet[0]];
+            }
+
+            // If ends were given in reverse order, temporarily change that.
+            var sortedSet:Array = srcSet.concat().sort(_routeComparison);
+            var mustReverseOutput:Boolean = (sortedSet[0] !== srcSet[0]);
+
+            // Walk the closest common ancestor and register all interim elements, including both
+            // ends.
+            var output:Array = [];
+            var $c:Object = {mustAdd: false};
+            var commonAncestorEl:SelectableDataElement = _getCommonAncestorOf(sortedSet);
+            commonAncestorEl.walk(function visitElement(testDescendantEl:SelectableDataElement):void {
+                    if (testDescendantEl == sortedSet[0]) {
+                        $c.mustAdd = true;
+                    }
+                    if ($c.mustAdd) {
+                        output.push(testDescendantEl);
+                    }
+                    if (testDescendantEl == sortedSet[1]) {
+                        $c.mustAdd = false;
+                    }
+                });
+
+            // Ensure returned elements flow in the original direction.
+            if (mustReverseOutput) {
+                output.reverse();
+            }
+            return output;
+        }
+
+        /**
+         * Gets the element that is the closest (grand)parent of all given (grand)child elements.
+         *
+         * @param   elements
+         *          Array of `SelectableDataElement` instances.
+         *
+         * @return  A `SelectableDataElement` instance that is the closest common ancestor of all
+         *          provided `elements`. Falls back to `root` if a better common ancestor
+         *          cannot be determined.
+         */
+        protected function _getCommonAncestorOf(elements:Array):SelectableDataElement {
+
+            // Get all routes and sort them lexicographically.
+            var routes:Array = elements.map(
+                    function callback(element:SelectableDataElement, ...ignore):String {
+                        return element.route;
+                    }
+                );
+            routes.sort();
+
+            // Get the shortest common prefix.
+            var firstRoute:String = routes[0];
+            var lastRoute:String = routes[routes.length - 1];
+            var i:int = 0;
+            while (i < firstRoute.length && firstRoute.charAt(i) === lastRoute.charAt(i)) {
+                i++;
+            }
+            var commonPrefix:String = firstRoute.substring(0, i);
+            if (!commonPrefix) {
+                return SelectableDataElement(root);
+            }
+            if (Strings.endsWith(commonPrefix, '_')) {
+                commonPrefix = commonPrefix.slice(0, -1);
+            }
+
+            // Return the element whose `route` matches the common prefix.
+            return SelectableDataElement(getElementByRoute(commonPrefix) || root);
+        }
+
+        /**
+         *
+         * Array sort callback function. Sorts an Array of `SelectableDataElement` instances by their `route`,
+         * placing ancestors before their descendants, in the order of a depth-first traversal.
+         *
+         * @param   elA Element to compare.
+         * @param   elB Element to compare with.
+         *
+         * @return  Positive integer if `elA` compares "greater than" `elB` (i.e., lower in hierarchy);
+         *          negative integer if `elA` compares "less than" `elB` (i.e., higher in hierarchy);
+         *          and 0 if they compare "equal" (i.e., same hierarchic position in different hierarchies,
+         *          or the exact same element within the same hierarchy).
+         *
+         * @see     Array.prototype.sort
+         */
+        protected function _routeComparison(elA:SelectableDataElement, elB:SelectableDataElement):int {
+            return Descriptor.multiPartComparison(elA.route, elB.route);
         }
     }
 }
