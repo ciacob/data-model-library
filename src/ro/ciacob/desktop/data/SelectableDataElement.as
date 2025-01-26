@@ -17,7 +17,7 @@ package ro.ciacob.desktop.data {
         private var _isSelectable:Boolean;
         private var _isUsingHighAnchor:Boolean;
         private var _eventDispatcher:EventDispatcher;
-        
+
         protected var _globalSelectionMap:Object;
 
         /**
@@ -283,18 +283,34 @@ package ro.ciacob.desktop.data {
             // in depth-first-traversal order.
             var normalizedSet:Array = [];
             var sortedSet:Array = rawSet.concat();
-            sortedSet.sort(_compareRoutes);
 
             // Get a hold of the highest level any of the sorted elements has. This is the
             // most deeply nested element among all received.
-            var highestLevel:int = 0;
-            for (var i:int = 0; i < sortedSet.length; i++) {
+            var normalizationLevel:int = 0;
+            var i:int;
+            for (i = 0; i < sortedSet.length; i++) {
                 var testEl:SelectableDataElement = sortedSet[i];
                 var testLevel:int = testEl.level;
-                if (testLevel > highestLevel) {
-                    highestLevel = testLevel;
+                if (testLevel > normalizationLevel) {
+                    normalizationLevel = testLevel;
                 }
             }
+
+            // Cleanup the input: remove redundant ascendants, e.g., remove "child 1" if "child 1.1"
+            // is also present, and its level is the same as the normalization level.
+            var atProperLevel:Array = [];
+            var atWrongLevel:Array = [];
+            for (i = 0; i < sortedSet.length; i++) {
+                var element:SelectableDataElement = sortedSet[i];
+                ((element.level === normalizationLevel) ? atProperLevel : atWrongLevel).push(element);
+            }
+            sortedSet = atWrongLevel.filter(function callback(wrongLevelEl:SelectableDataElement, ...ignore):Boolean {
+                    return atProperLevel.every(function callback(properLevelEl:SelectableDataElement, ...ignore):Boolean {
+                            return !properLevelEl.route.startsWith(wrongLevelEl.route);
+                        });
+                })
+                .concat(atProperLevel)
+                .sort(_compareRoutes);
 
             // Find the closest common ancestor we can use as for traversal.
             var commonAncestorEl:SelectableDataElement = _getCommonAncestorOf(sortedSet);
@@ -303,7 +319,7 @@ package ro.ciacob.desktop.data {
             // its descendants living at the highest level, and which relate to or are among the received,
             // original elements.
             commonAncestorEl.walk(function visitElement(testDescendantEl:SelectableDataElement):void {
-                    if (testDescendantEl.level === highestLevel) {
+                    if (testDescendantEl.level === normalizationLevel) {
 
                         // Descendant was already in the original set.
                         if (sortedSet.includes(testDescendantEl)) {
@@ -470,7 +486,11 @@ package ro.ciacob.desktop.data {
         protected function _getCommonAncestorOf(elements:Array):SelectableDataElement {
 
             // Get all routes and sort them lexicographically.
-            var routes:Array = elements.map(
+            var routes:Array = elements
+                .filter(function callback(element:SelectableDataElement, ...ignore):Boolean {
+                        return element && element.route;
+                    })
+                .map(
                     function callback(element:SelectableDataElement, ...ignore):String {
                         return element.route;
                     }
@@ -519,6 +539,15 @@ package ro.ciacob.desktop.data {
          * @see     Array.prototype.sort
          */
         protected function _compareRoutes(elA:SelectableDataElement, elB:SelectableDataElement):int {
+            if ((!elA && !elB) || (!elA.route && !elB.route)) {
+                return 0;
+            }
+            if ((elA && !elB) || (elA.route && !elB.route)) {
+                return 1;
+            }
+            if ((!elA && elB) || (!elA.route && elB.route)) {
+                return -1;
+            }
             return Descriptor.multiPartComparison(elA.route, elB.route);
         }
     }
